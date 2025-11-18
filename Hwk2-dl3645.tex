@@ -809,6 +809,92 @@ where $O_j = \{i : (i,j) \in O\}$ is the set of senators who cast a non-missing 
 
 \item \textbf{Bill discriminations $\alpha_j$.} Assume the prior you proposed in 2.1 for $\alpha_j$. Derive the conditional distribution of $\alpha_j$ given $z, \theta, \beta$. If you chose a Normal prior, it will be Normal; if you chose a truncated Normal prior, it will be truncated Normal (see Useful Formulas for information on the Truncated Normal).
 
+We proceed just like for $\theta_i$ and $\beta_j$, now treating $\alpha_j$ as the unknown with $(z, \theta, \beta)$ given. Suppose the prior is
+\[
+\alpha_j \sim \mathcal{N}(\mu_\alpha, \sigma^2_\alpha).
+\]
+
+\textbf{Step 1: Write the joint in exponential form.}
+
+For a given bill $j$, the complete conditional is proportional to the prior on $\alpha_j$ times the likelihood of the observed latent utilities $z_{ij}$ for all senators $i \in O_j$ who voted on bill $j$:
+\[
+p(\alpha_j \mid z, \theta, \beta) \propto p(\alpha_j) \prod_{i \in O_j} p(z_{ij} \mid \theta_i, \beta_j, \alpha_j).
+\]
+
+The latent utility model is
+\[
+z_{ij} \mid \theta_i, \beta_j, \alpha_j \sim \mathcal{N}(\alpha_j(\theta_i - \beta_j), 1).
+\]
+
+Let
+\[
+x_{ij} := \theta_i - \beta_j,
+\]
+so
+\[
+z_{ij} \mid \alpha_j \sim \mathcal{N}(\alpha_j x_{ij}, 1).
+\]
+
+Then
+\begin{align*}
+\log p(\alpha_j \mid z, \theta, \beta) &= \text{const} - \frac{1}{2\sigma^2_\alpha}(\alpha_j - \mu_\alpha)^2 - \frac{1}{2}\sum_{i \in O_j} (z_{ij} - \alpha_j x_{ij})^2\\
+&= \text{const} - \frac{1}{2\sigma^2_\alpha}(\alpha_j^2 - 2\mu_\alpha \alpha_j) - \frac{1}{2}\sum_{i \in O_j} (z_{ij}^2 - 2z_{ij} \alpha_j x_{ij} + \alpha_j^2 x_{ij}^2).
+\end{align*}
+
+\textbf{Step 2: Collect quadratic terms in $\alpha_j$.}
+
+The coefficient of $\alpha_j^2$ in the exponent is
+\[
+-\frac{1}{2}\left[\frac{1}{\sigma^2_\alpha} + \sum_{i \in O_j} x_{ij}^2\right].
+\]
+
+The coefficient of $\alpha_j$ is
+\[
+\frac{\mu_\alpha}{\sigma^2_\alpha} + \sum_{i \in O_j} z_{ij} x_{ij}.
+\]
+
+Define
+\[
+A_j := \frac{1}{\sigma^2_\alpha} + \sum_{i \in O_j} (\theta_i - \beta_j)^2, \qquad B_j := \frac{\mu_\alpha}{\sigma^2_\alpha} + \sum_{i \in O_j} z_{ij}(\theta_i - \beta_j).
+\]
+
+Then
+\[
+\log p(\alpha_j \mid z, \theta, \beta) = \text{const} - \frac{1}{2}(A_j \alpha_j^2 - 2B_j \alpha_j).
+\]
+
+\textbf{Step 3: Complete the square.}
+
+Complete the square in $\alpha_j$:
+\[
+A_j \alpha_j^2 - 2B_j \alpha_j = A_j\left(\alpha_j - \frac{B_j}{A_j}\right)^2 - A_j\left(\frac{B_j}{A_j}\right)^2.
+\]
+
+So
+\[
+\log p(\alpha_j \mid z, \theta, \beta) = \text{const}' - \frac{A_j}{2}\left(\alpha_j - \frac{B_j}{A_j}\right)^2,
+\]
+which is the kernel of a Normal distribution.
+
+\textbf{Final form (Normal prior).} For each bill $j$, the conditional distribution is Gaussian:
+\[
+\alpha_j \mid z, \theta, \beta \sim \mathcal{N}(m_{\alpha_j}, v_{\alpha_j}),
+\]
+with
+\[
+v_{\alpha_j} = \left(\frac{1}{\sigma^2_\alpha} + \sum_{i \in O_j} (\theta_i - \beta_j)^2\right)^{-1},
+\]
+\[
+m_{\alpha_j} = v_{\alpha_j}\left(\frac{\mu_\alpha}{\sigma^2_\alpha} + \sum_{i \in O_j} z_{ij}(\theta_i - \beta_j)\right),
+\]
+where $O_j = \{i : (i,j) \in O\}$ is the set of senators who cast a non-missing vote on bill $j$.
+
+\textbf{Truncated Normal prior.} If instead the prior is
+\[
+\alpha_j \sim \mathcal{N}(\mu_\alpha, \sigma^2_\alpha) \text{ truncated to } (0, \infty),
+\]
+the conditional is the same Normal $\mathcal{N}(m_{\alpha_j}, v_{\alpha_j})$ truncated to $(0, \infty)$.
+
 \item \textbf{Marginalizing out $z$.} Write down $p(y, \alpha, \theta, \beta)$. What is $p(y \mid \alpha, \theta, \beta)$?
 
 \item \textbf{Variational family.} Assume a factorization
