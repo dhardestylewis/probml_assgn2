@@ -149,34 +149,75 @@ Overall, holding $\beta_j=\beta_k=\beta$ and $\alpha_j>\alpha_k>0$, bill $j$ is 
 
 \item \textbf{Missing Votes:} How should we handle $y_{ij} = \text{missing}$ in this setup?
 
-
 We start from the model, for each $(i,j)$:
-\[
-z_{ij} = \alpha_j(\theta_i - \beta_j) + \epsilon_{ij}, \qquad \epsilon_{ij} \sim \mathcal{N}(0,1), \qquad y_{ij} = \mathbb{1}(z_{ij} > 0).
-\]
+\begin{align*}
+z_{ij} &= \alpha_j(\theta_i - \beta_j) + \epsilon_{ij}, && \epsilon_{ij} \sim \mathcal{N}(0,1),\\
+y_{ij} &= \mathbb{1}(z_{ij} > 0).
+\end{align*}
 From the earlier derivation, we obtained an explicit expression for the voting probability:
 \[
-\Pr(y_{ij}=1 \mid \theta_i, \alpha_j, \beta_j) = \Pr(z_{ij} > 0 \mid \theta_i, \alpha_j, \beta_j) = \Phi\big(\alpha_j(\theta_i - \beta_j)\big),
+\Pr(y_{ij}=1 \mid \theta_i, \alpha_j, \beta_j) = \Pr(z_{ij} > 0 \mid \theta_i, \alpha_j, \beta_j) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big),
 \]
 where $\Phi(\cdot)$ is the standard normal CDF. Therefore,
 \[
-\Pr(y_{ij}=0 \mid \theta_i, \alpha_j, \beta_j) = 1 - \Pr(y_{ij}=1 \mid \theta_i, \alpha_j, \beta_j) = 1 - \Phi\big(\alpha_j(\theta_i - \beta_j)\big).
+\Pr(y_{ij}=0 \mid \theta_i, \alpha_j, \beta_j) = 1 - \Pr(y_{ij}=1 \mid \theta_i, \alpha_j, \beta_j) = 1 - \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big).
 \]
-\textbf{Bernoulli representation.} Define $p_{ij} := \Pr(y_{ij}=1 \mid \theta_i, \alpha_j, \beta_j) = \Phi\big(\alpha_j(\theta_i - \beta_j)\big)$. Then, for a single observed vote $y_{ij} \in \{0,1\}$,
+
+\textbf{Bernoulli representation.} Define
 \[
-\Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = p_{ij}^{\,y_{ij}} (1-p_{ij})^{1-y_{ij}}.
+p_{ij} := \Pr(y_{ij}=1 \mid \theta_i, \alpha_j, \beta_j) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big).
 \]
-Substituting $p_{ij} = \Phi\big(\alpha_j(\theta_i - \beta_j)\big)$ gives
+Then, for a single observed vote $y_{ij} \in \{0,1\}$:
+\begin{itemize}
+\item If $y_{ij}=1$,
 \[
-\Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = [\Phi\big(\alpha_j(\theta_i - \beta_j)\big)]^{y_{ij}} [1-\Phi\big(\alpha_j(\theta_i - \beta_j)\big)]^{1-y_{ij}}.
+\Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = p_{ij}.
 \]
-\textbf{Joint likelihood.} Define the index set of non-missing votes $O := \{ (i,j) : y_{ij} \in \{0,1\} \}$. Assuming conditional independence of votes given $\{\theta_i\}$ and $\{\alpha_j, \beta_j\}$,
+\item If $y_{ij}=0$,
 \[
-p(\{y_{ij}\}_{(i,j)\in O} \mid \{\theta_i\}, \{\alpha_j, \beta_j\}) = \prod_{(i,j)\in O} \Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j),
+\Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = 1 - p_{ij}.
 \]
-which by the Bernoulli form becomes
+\end{itemize}
+
+Consider
 \[
-p(\{y_{ij}\}_{(i,j)\in O} \mid \{\theta_i\}, \{\alpha_j, \beta_j\}) = \prod_{(i,j)\in O} [\Phi\big(\alpha_j(\theta_i - \beta_j)\big)]^{y_{ij}} [1-\Phi\big(\alpha_j(\theta_i - \beta_j)\big)]^{1-y_{ij}}.
+p_{ij}^{\,y_{ij}} (1-p_{ij})^{\,1-y_{ij}}.
+\]
+Check both possible values of $y_{ij}$:
+\begin{itemize}
+\item If $y_{ij}=1$:
+\[
+p_{ij}^{\,1} (1-p_{ij})^{\,0} = p_{ij} \cdot 1 = p_{ij},
+\]
+which matches $\Pr(y_{ij}=1 \mid \theta_i, \alpha_j, \beta_j)$.
+
+\item If $y_{ij}=0$:
+\[
+p_{ij}^{\,0} (1-p_{ij})^{\,1} = 1 \cdot (1-p_{ij}) = 1 - p_{ij},
+\]
+which matches $\Pr(y_{ij}=0 \mid \theta_i, \alpha_j, \beta_j)$.
+\end{itemize}
+
+Therefore, the two cases above are exactly equivalent to:
+\[
+\Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = p_{ij}^{\,y_{ij}} (1-p_{ij})^{\,1-y_{ij}}.
+\]
+Substituting $p_{ij} = \Phi\big(\alpha_j(\theta_i - \beta_j)\big)$:
+\[
+\Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = [\Phi\!\big(\alpha_j(\theta_i - \beta_j)\big)]^{y_{ij}} [1-\Phi\!\big(\alpha_j(\theta_i - \beta_j)\big)]^{1-y_{ij}}.
+\]
+
+\textbf{Joint likelihood.} Define the index set of non-missing votes:
+\[
+O := \{ (i,j) : y_{ij} \in \{0,1\} \}.
+\]
+Under the usual assumption that votes are conditionally independent given $\{\theta_i\}$ and $\{\alpha_j, \beta_j\}$,
+\[
+p(\{y_{ij}\}_{(i,j)\in O} \mid \{\theta_i\}, \{\alpha_j, \beta_j\}) = \prod_{(i,j)\in O} \Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j).
+\]
+Substituting the single-vote Bernoulli form:
+\[
+p(\{y_{ij}\}_{(i,j)\in O} \mid \{\theta_i\}, \{\alpha_j, \beta_j\}) = \prod_{(i,j)\in O} [\Phi\!\big(\alpha_j(\theta_i - \beta_j)\big)]^{y_{ij}} [1-\Phi\!\big(\alpha_j(\theta_i - \beta_j)\big)]^{1-y_{ij}}.
 \]
 
 \item \textbf{Sketch:} Sketch the graphical model using plate notation.
