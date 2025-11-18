@@ -1052,6 +1052,104 @@ q(\theta, \beta, \alpha, z) = \left(\prod_{i=1}^n q(\theta_i)\right) \left(\prod
 \]
 where $q(\theta_i)$ and $q(\beta_j)$ are Normal, $q(\alpha_j)$ is either Normal or truncated Normal (depending on your chosen prior), and $q(z_{ij})$ is a truncated Normal as in 1.2(b). Write the full family explicitly and state which moments of each factor you will need for updates.
 
+Assume the mean-field factorization
+\[
+q(\theta, \beta, \alpha, z) = \left(\prod_{i=1}^n q(\theta_i)\right) \left(\prod_{j=1}^d q(\beta_j)\,q(\alpha_j)\right) \left(\prod_{i=1}^n \prod_{j=1}^p q(z_{ij})\right),
+\]
+with each factor in a parametric family as follows.
+
+\textbf{Senator positions $\theta_i$.} For each $i=1,\dots,n$,
+\[
+q(\theta_i) = \mathcal{N}\!\big(m_{\theta_i},\,s_{\theta_i}^2\big),
+\]
+with free variational parameters $m_{\theta_i}\in\mathbb{R}$ and $s_{\theta_i}^2>0$.
+
+\textbf{Bill locations $\beta_j$.} For each $j=1,\dots,d$,
+\[
+q(\beta_j) = \mathcal{N}\!\big(m_{\beta_j},\,s_{\beta_j}^2\big),
+\]
+with variational parameters $m_{\beta_j}\in\mathbb{R}$, $s_{\beta_j}^2>0$.
+
+\textbf{Bill discriminations $\alpha_j$.} For each $j=1,\dots,d$,
+\begin{itemize}
+\item if the prior on $\alpha_j$ is Normal,
+\[
+q(\alpha_j) = \mathcal{N}\!\big(m_{\alpha_j},\,s_{\alpha_j}^2\big),
+\]
+\item if the prior on $\alpha_j$ is truncated Normal (e.g.\ $\alpha_j>0$),
+\[
+q(\alpha_j) = \mathcal{N}\!\big(m_{\alpha_j},\,s_{\alpha_j}^2\big) \;\text{truncated to}\;(0,\infty),
+\]
+\end{itemize}
+with variational parameters $m_{\alpha_j}\in\mathbb{R}$, $s_{\alpha_j}^2>0$ in either case.
+
+\textbf{Latent utilities $z_{ij}$.} For each observed vote $(i,j)\in O$ with $y_{ij}\in\{0,1\}$,
+\[
+q(z_{ij}) = \begin{cases}
+\mathcal{N}\!\big(m_{z_{ij}},\,s_{z_{ij}}^2\big)\ \text{truncated to }(0,\infty), & y_{ij}=1,\\[4pt]
+\mathcal{N}\!\big(m_{z_{ij}},\,s_{z_{ij}}^2\big)\ \text{truncated to }(-\infty,0], & y_{ij}=0,
+\end{cases}
+\]
+with variational parameters $m_{z_{ij}}\in\mathbb{R}$, $s_{z_{ij}}^2>0$.
+
+For missing votes $y_{ij}=-1$, no $q(z_{ij})$ factor is introduced (those pairs are excluded from the product).
+
+Putting this together, the full family is
+\begin{align*}
+q(\theta,\beta,\alpha,z)
+&=
+\left[\prod_{i=1}^n \mathcal{N}\!\big(\theta_i\mid m_{\theta_i},s_{\theta_i}^2\big)\right]
+\left[\prod_{j=1}^d \mathcal{N}\!\big(\beta_j\mid m_{\beta_j},s_{\beta_j}^2\big)\,q(\alpha_j)\right] \\
+&\quad\times
+\prod_{(i,j)\in O}
+q(z_{ij}),
+\end{align*}
+with $q(\alpha_j)$ and $q(z_{ij})$ as specified above.
+
+\textbf{Moments needed for CAVI updates.}
+
+From these factors, the coordinate updates will require the following expectations:
+\begin{itemize}
+\item \textbf{For each senator $i$}:
+\begin{itemize}
+\item $\mathbb{E}_q[\theta_i] = m_{\theta_i}$
+\item $\mathbb{E}_q[\theta_i^2] = s_{\theta_i}^2 + m_{\theta_i}^2$
+\end{itemize}
+
+\item \textbf{For each bill location $j$}:
+\begin{itemize}
+\item $\mathbb{E}_q[\beta_j] = m_{\beta_j}$
+\item $\mathbb{E}_q[\beta_j^2] = s_{\beta_j}^2 + m_{\beta_j}^2$
+\end{itemize}
+
+\item \textbf{For each bill discrimination $j$}:
+\begin{itemize}
+\item $\mathbb{E}_q[\alpha_j]$
+\item $\mathbb{E}_q[\alpha_j^2]$
+\end{itemize}
+(If $q(\alpha_j)$ is Normal, these are $m_{\alpha_j}$ and $s_{\alpha_j}^2 + m_{\alpha_j}^2$;
+if truncated Normal, they are given by the standard truncated Normal moment formulas.)
+
+\item \textbf{For each latent utility $z_{ij}$ with $(i,j)\in O$}:
+\begin{itemize}
+\item $\mathbb{E}_q[z_{ij}]$
+\item $\mathbb{E}_q[z_{ij}^2]$
+\end{itemize}
+(Again, computed using the truncated Normal formulas for the appropriate truncation region.)
+\end{itemize}
+
+Because of the mean-field factorization,
+\[
+q(\theta,\beta,\alpha,z) = q(\theta)\,q(\beta)\,q(\alpha)\,q(z),
+\]
+all mixed expectations factor into products of first moments, for example:
+\begin{itemize}
+\item $\mathbb{E}_q[\alpha_j\,\theta_i] = \mathbb{E}_q[\alpha_j]\,\mathbb{E}_q[\theta_i]$,
+\item $\mathbb{E}_q[\alpha_j\,\beta_j] = \mathbb{E}_q[\alpha_j]\,\mathbb{E}_q[\beta_j]$,
+\item $\mathbb{E}_q[\alpha_j\,(\theta_i-\beta_j)] = \mathbb{E}_q[\alpha_j]\,(\mathbb{E}_q[\theta_i]-\mathbb{E}_q[\beta_j])$,
+\end{itemize}
+so all coordinate updates can be written in terms of the one- and two-moment quantities listed above.
+
 \item \textbf{Coordinate updates.} Using the identity
 \[
 \log q^*(v) \propto \mathbb{E}_{-v}[\log p(y, z, \theta, \beta, \alpha)],
