@@ -448,6 +448,119 @@ z_{ij} \mid y_{ij}, \theta, \beta, \alpha \sim
 \]
 where $\mu_{ij} = \alpha_j(\theta_i - \beta_j)$. If $y_{ij} = -1$ (missing), explain why no $z_{ij}$ is drawn.
 
+We start from the latent utility model, for each $(i,j)$:
+
+Latent utility:
+\[
+z_{ij} \mid \theta_i, \beta_j, \alpha_j \sim \mathcal{N}(\mu_{ij}, 1),
+\]
+where
+\[
+\mu_{ij} := \alpha_j(\theta_i - \beta_j).
+\]
+
+Observed vote:
+\[
+y_{ij} = \mathbb{1}(z_{ij} > 0).
+\]
+
+Equivalently, the conditional distribution of $y_{ij}$ given $z_{ij}$ is
+\[
+p(y_{ij} \mid z_{ij}) = \mathbb{1}\{y_{ij} = 1, \, z_{ij} > 0\} + \mathbb{1}\{y_{ij} = 0, \, z_{ij} \le 0\}.
+\]
+
+\textbf{Conditional distribution of $z_{ij}$ given $y_{ij}$.} We want $p(z_{ij} \mid y_{ij}, \theta, \beta, \alpha)$. By Bayes' rule (up to a proportionality constant):
+\[
+p(z_{ij} \mid y_{ij}, \theta, \beta, \alpha) \;\propto\; p(y_{ij} \mid z_{ij})\, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j).
+\]
+
+But we know
+\[
+p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) = \mathcal{N}(z_{ij} \mid \mu_{ij}, 1).
+\]
+
+Now consider two cases.
+
+\textbf{Case 1: $y_{ij} = 1$.} If $y_{ij} = 1$, then by the definition of $y_{ij}$,
+\[
+p(y_{ij} = 1 \mid z_{ij}) = \mathbb{1}\{z_{ij} > 0\}.
+\]
+
+So the conditional density is
+\[
+p(z_{ij} \mid y_{ij} = 1, \theta, \beta, \alpha) \;\propto\; \mathbb{1}\{z_{ij} > 0\}\, \mathcal{N}(z_{ij} \mid \mu_{ij}, 1).
+\]
+
+This is exactly a Normal $\mathcal{N}(\mu_{ij}, 1)$ density restricted to the domain $(0, \infty)$ and renormalized. Therefore:
+\[
+z_{ij} \mid y_{ij} = 1, \theta, \beta, \alpha \sim \mathcal{N}(\mu_{ij}, 1) \text{ truncated to } (0, \infty).
+\]
+
+\textbf{Case 2: $y_{ij} = 0$.} If $y_{ij} = 0$, then
+\[
+p(y_{ij} = 0 \mid z_{ij}) = \mathbb{1}\{z_{ij} \le 0\}.
+\]
+
+So
+\[
+p(z_{ij} \mid y_{ij} = 0, \theta, \beta, \alpha) \;\propto\; \mathbb{1}\{z_{ij} \le 0\}\, \mathcal{N}(z_{ij} \mid \mu_{ij}, 1),
+\]
+which is a Normal $\mathcal{N}(\mu_{ij}, 1)$ restricted to $(-\infty, 0]$. Hence:
+\[
+z_{ij} \mid y_{ij} = 0, \theta, \beta, \alpha \sim \mathcal{N}(\mu_{ij}, 1) \text{ truncated to } (-\infty, 0].
+\]
+
+Putting both cases together:
+\[
+z_{ij} \mid y_{ij}, \theta, \beta, \alpha \sim
+\begin{cases}
+\mathcal{N}(\mu_{ij}, 1) \text{ truncated to } (0, \infty), & y_{ij} = 1,\\[4pt]
+\mathcal{N}(\mu_{ij}, 1) \text{ truncated to } (-\infty, 0], & y_{ij} = 0,
+\end{cases}
+\]
+with $\mu_{ij} = \alpha_j(\theta_i - \beta_j)$.
+
+\textbf{Missing case: $y_{ij} = -1$.} Recall the augmented model for a single $(i,j)$:
+\begin{align*}
+z_{ij} \mid \theta_i, \beta_j, \alpha_j &\sim \mathcal{N}(\mu_{ij}, 1), \qquad \mu_{ij} := \alpha_j(\theta_i - \beta_j),\\
+y_{ij} &= \mathbb{1}(z_{ij} > 0), \quad y_{ij} \in \{0, 1\}.
+\end{align*}
+
+For observed votes $y_{ij} \in \{0, 1\}$, we showed
+\[
+z_{ij} \mid y_{ij}, \theta, \beta, \alpha \sim
+\begin{cases}
+\mathcal{N}(\mu_{ij}, 1) \text{ truncated to } (0, \infty), & y_{ij} = 1,\\[4pt]
+\mathcal{N}(\mu_{ij}, 1) \text{ truncated to } (-\infty, 0], & y_{ij} = 0.
+\end{cases}
+\]
+
+Now consider the missing case $y_{ij} = -1$. Define the index set of non-missing votes
+\[
+O := \{(i,j): y_{ij} \in \{0, 1\}\}.
+\]
+
+Start from the full augmented joint over all pairs $(i,j)$:
+\begin{align*}
+p\big(\{y_{ij}, z_{ij}\}_{i,j}, \theta, \beta, \alpha\big) &= \Bigg[\prod_{(i,j) \in O} p(y_{ij} \mid z_{ij})\, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\Bigg]\\
+&\quad \times \Bigg[\prod_{(i,j) \notin O} p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\Bigg] p(\theta)\, p(\beta)\, p(\alpha).
+\end{align*}
+
+To obtain the joint distribution involving only observed votes and their latent utilities, integrate out the $\{z_{ij}\}_{(i,j) \notin O}$:
+\begin{align*}
+p\big(\{y_{ij}, z_{ij}\}_{(i,j) \in O}, \theta, \beta, \alpha\big) &= \int \Bigg[\prod_{(i,j) \in O} p(y_{ij} \mid z_{ij})\, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\Bigg]\\
+&\quad \times \Bigg[\prod_{(i,j) \notin O} p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\Bigg] p(\theta)\, p(\beta)\, p(\alpha)\, \prod_{(i,j) \notin O} dz_{ij}\\[4pt]
+&= \Bigg[\prod_{(i,j) \in O} p(y_{ij} \mid z_{ij})\, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\Bigg] p(\theta)\, p(\beta)\, p(\alpha),
+\end{align*}
+because each factor $\int p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\, dz_{ij} = 1$ for $(i,j) \notin O$.
+
+Thus the joint distribution over observed votes, their latent utilities, and the parameters is
+\[
+p\big(\{y_{ij}, z_{ij}\}_{(i,j) \in O}, \theta, \beta, \alpha\big) = \Bigg[\prod_{(i,j) \in O} p(y_{ij} \mid z_{ij})\, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\Bigg] p(\theta)\, p(\beta)\, p(\alpha).
+\]
+
+Pairs $(i,j)$ with $y_{ij} = -1$ are not in $O$, so they do not appear in this product and there is no likelihood term involving $y_{ij}$. Introducing a corresponding $z_{ij}$ that appears only in its prior conditional $p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)$ would integrate out to 1 and would not change the posterior. Therefore, when $y_{ij} = -1$ (missing), we simply omit the latent utility and no $z_{ij}$ is drawn.
+
 \item \textbf{Senator positions $\theta_i$.} Derive the conditional distribution of $\theta_i$ given $z, \beta, \alpha$ under your chosen prior from 2.1. Show it is Gaussian, and write down its mean and variance.
 
 \item \textbf{Bill locations $\beta_j$.} Derive the conditional distribution of $\beta_j$ given $z, \theta, \alpha$ under your chosen prior from 2.1. Show it is Gaussian, and write down its mean and variance.
