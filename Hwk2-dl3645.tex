@@ -1419,6 +1419,107 @@ q(\Theta, B) = \prod_{i=1}^n q(\theta_i) \prod_{j=1}^m q(\beta_j), \quad q(\thet
 \begin{enumerate}[label=\alph*)]
 \item \textbf{ELBO pieces.} Write the ELBO $\mathcal{L}(q)$ and list the expectations it comprises.
 
+We use the mean-field family
+\[
+q(\Theta, B) = \prod_{i=1}^n q(\theta_i) \prod_{j=1}^m q(\beta_j), \quad q(\theta_i) = \mathcal{N}(m_{\theta_i}, V_{\theta_i}), \quad q(\beta_j) = \mathcal{N}(m_{\beta_j}, V_{\beta_j}).
+\]
+
+The joint model:
+\[
+\theta_i \sim \mathcal{N}(0, \eta_\theta^2 I_K), \quad \beta_j \sim \mathcal{N}(0, \eta_B^2 I_K),
+\]
+\[
+x_{ij} \mid \theta_i, \beta_j \sim \mathcal{N}(\theta_i^\top \beta_j, \sigma^2), \quad (i,j) \in \Omega.
+\]
+
+So the ELBO is
+\[
+\mathcal{L}(q) = \mathbb{E}_q[\log p(X, \Theta, B)] - \mathbb{E}_q[\log q(\Theta, B)].
+\]
+
+Break it into pieces.
+
+\textbf{Likelihood term.}
+\[
+\log p(X \mid \Theta, B) = \sum_{(i,j) \in \Omega} \log \mathcal{N}(x_{ij} \mid \theta_i^\top \beta_j, \sigma^2).
+\]
+
+Up to an additive constant in $q$,
+\[
+\log \mathcal{N}(x_{ij} \mid \theta_i^\top \beta_j, \sigma^2) = -\frac{1}{2\sigma^2}(x_{ij} - \theta_i^\top \beta_j)^2 + \text{const}.
+\]
+
+So
+\[
+\mathbb{E}_q[\log p(X \mid \Theta, B)] = -\frac{1}{2\sigma^2} \sum_{(i,j) \in \Omega} \mathbb{E}_q[(x_{ij} - \theta_i^\top \beta_j)^2] + \text{const},
+\]
+with
+\[
+\mathbb{E}_q[(x_{ij} - \theta_i^\top \beta_j)^2] = x_{ij}^2 - 2x_{ij}\,\mathbb{E}_q[\theta_i^\top \beta_j] + \mathbb{E}_q[(\theta_i^\top \beta_j)^2].
+\]
+
+\textbf{Prior terms.}
+\[
+\log p(\Theta) = \sum_{i=1}^n \log \mathcal{N}(\theta_i \mid 0, \eta_\theta^2 I_K),
+\]
+\[
+\log p(B) = \sum_{j=1}^m \log \mathcal{N}(\beta_j \mid 0, \eta_B^2 I_K).
+\]
+
+Up to constants,
+\[
+\mathbb{E}_q[\log p(\Theta)] = -\frac{1}{2\eta_\theta^2} \sum_{i=1}^n \mathbb{E}_q[\theta_i^\top \theta_i] + \text{const},
+\]
+\[
+\mathbb{E}_q[\log p(B)] = -\frac{1}{2\eta_B^2} \sum_{j=1}^m \mathbb{E}_q[\beta_j^\top \beta_j] + \text{const}.
+\]
+
+\textbf{Entropy (variational) terms.}
+\[
+\mathbb{E}_q[\log q(\Theta, B)] = \sum_{i=1}^n \mathbb{E}_q[\log q(\theta_i)] + \sum_{j=1}^m \mathbb{E}_q[\log q(\beta_j)].
+\]
+
+For each Gaussian factor,
+\[
+\mathbb{E}_q[\log q(\theta_i)] = -\frac{1}{2}\big(\log |V_{\theta_i}| + K(1 + \log 2\pi)\big),
+\]
+\[
+\mathbb{E}_q[\log q(\beta_j)] = -\frac{1}{2}\big(\log |V_{\beta_j}| + K(1 + \log 2\pi)\big).
+\]
+
+\textbf{Putting it together (up to constants independent of $q$):}
+\begin{align*}
+\mathcal{L}(q) &= -\frac{1}{2\sigma^2} \sum_{(i,j) \in \Omega} \big(x_{ij}^2 - 2x_{ij}\,\mathbb{E}_q[\theta_i^\top \beta_j] + \mathbb{E}_q[(\theta_i^\top \beta_j)^2]\big)\\
+&\quad -\frac{1}{2\eta_\theta^2} \sum_i \mathbb{E}_q[\theta_i^\top \theta_i] - \frac{1}{2\eta_B^2} \sum_j \mathbb{E}_q[\beta_j^\top \beta_j]\\
+&\quad - \sum_i \mathbb{E}_q[\log q(\theta_i)] - \sum_j \mathbb{E}_q[\log q(\beta_j)] + \text{const}.
+\end{align*}
+
+\textbf{Expectations needed under $q$.}
+
+Under the mean-field Gaussians,
+
+\textit{First and second moments of user factors:}
+\[
+\mathbb{E}_q[\theta_i] = m_{\theta_i}, \quad \mathbb{E}_q[\theta_i \theta_i^\top] = V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top.
+\]
+
+\textit{First and second moments of item factors:}
+\[
+\mathbb{E}_q[\beta_j] = m_{\beta_j}, \quad \mathbb{E}_q[\beta_j \beta_j^\top] = V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top.
+\]
+
+\textit{Cross terms for likelihood:}
+\[
+\mathbb{E}_q[\theta_i^\top \beta_j] = m_{\theta_i}^\top m_{\beta_j},
+\]
+\[
+\mathbb{E}_q[(\theta_i^\top \beta_j)^2] = \mathbb{E}_q[\beta_j^\top (\theta_i \theta_i^\top) \beta_j] = \text{tr}\!\big((V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top)(V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top)\big).
+\]
+
+\textit{Entropy pieces for each Gaussian factor:}
+
+$\mathbb{E}_q[\log q(\theta_i)]$, $\mathbb{E}_q[\log q(\beta_j)]$ as above in terms of $V_{\theta_i}, V_{\beta_j}$.
+
 \item \textbf{CAVI updates.} Using the identity $\log q^\star(x_v) \propto \mathbb{E}_{-v}[\log p(x_v \mid x_{-v})]$ and the \emph{given} complete conditionals 3 and 4, derive the optimal CAVI updates by replacing unknowns with their $q$-expectations. State the updates for $V^{-1}_{\theta_i}$, $V^{-1}_{\beta_j}$, $m_{\theta_i}$, and $m_{\beta_j}$.
 
 \item \textbf{Algorithm sketch.} Give pseudocode for one CAVI sweep:
