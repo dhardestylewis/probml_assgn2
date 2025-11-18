@@ -897,6 +897,155 @@ the conditional is the same Normal $\mathcal{N}(m_{\alpha_j}, v_{\alpha_j})$ tru
 
 \item \textbf{Marginalizing out $z$.} Write down $p(y, \alpha, \theta, \beta)$. What is $p(y \mid \alpha, \theta, \beta)$?
 
+\textbf{Step 1: Start from the joint with $z$.}
+
+Restricting to non-missing entries $(i,j) \in O$,
+\[
+p(y, z, \alpha, \theta, \beta) = \left[\prod_{(i,j) \in O} p(y_{ij} \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\right] \, p(\theta) \, p(\beta) \, p(\alpha),
+\]
+where
+\[
+z_{ij} \mid \theta_i, \beta_j, \alpha_j \sim \mathcal{N}\!\big(\mu_{ij}, 1\big), \quad \mu_{ij} := \alpha_j(\theta_i - \beta_j),
+\]
+and
+\[
+y_{ij} = \mathbf{1}(z_{ij} > 0), \quad y_{ij} \in \{0, 1\}.
+\]
+
+The conditional for $y_{ij}$ given $z_{ij}$ is
+\[
+p(y_{ij} \mid z_{ij}) = \begin{cases}
+1, & y_{ij} = 1, \, z_{ij} > 0,\\
+1, & y_{ij} = 0, \, z_{ij} \le 0,\\
+0, & \text{otherwise}.
+\end{cases}
+\]
+
+Equivalently,
+\[
+p(y_{ij} \mid z_{ij}) = [\mathbf{1}(z_{ij} > 0)]^{y_{ij}} [\mathbf{1}(z_{ij} \le 0)]^{1 - y_{ij}}.
+\]
+
+\textbf{Step 2: Marginalize out $z$.}
+
+We want
+\[
+p(y, \alpha, \theta, \beta) = \int p(y, z, \alpha, \theta, \beta) \, dz.
+\]
+
+Plug in the factorized joint and separate the integral:
+\begin{align*}
+p(y, \alpha, \theta, \beta) &= \int \left[\prod_{(i,j) \in O} p(y_{ij} \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)\right] \, p(\theta) \, p(\beta) \, p(\alpha) \, dz\\
+&= p(\theta) \, p(\beta) \, p(\alpha) \, \prod_{(i,j) \in O} \int p(y_{ij} \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) \, dz_{ij}.
+\end{align*}
+
+For each fixed $(i,j)$,
+\[
+\int p(y_{ij} \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) \, dz_{ij}.
+\]
+
+\textbf{Step 3: Evaluate the inner integral.}
+
+Recall
+\[
+z_{ij} \mid \theta_i, \beta_j, \alpha_j \sim \mathcal{N}(\mu_{ij}, 1), \quad \mu_{ij} = \alpha_j(\theta_i - \beta_j).
+\]
+
+So the density is
+\[
+p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) = \phi(z_{ij} - \mu_{ij}) = \frac{1}{\sqrt{2\pi}} \exp\!\left(-\frac{(z_{ij} - \mu_{ij})^2}{2}\right).
+\]
+
+We treat the two cases $y_{ij} = 1$ and $y_{ij} = 0$ separately.
+
+\textit{Case A: $y_{ij} = 1$.}
+
+Then
+\[
+p(y_{ij} = 1 \mid \theta_i, \alpha_j, \beta_j) = \int p(y_{ij} = 1 \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) \, dz_{ij}.
+\]
+
+But $p(y_{ij} = 1 \mid z_{ij}) = \mathbf{1}(z_{ij} > 0)$, so
+\begin{align*}
+p(y_{ij} = 1 \mid \theta_i, \alpha_j, \beta_j) &= \int_0^\infty \phi(z_{ij} - \mu_{ij}) \, dz_{ij}\\
+&= \Pr(z_{ij} > 0 \mid \theta_i, \alpha_j, \beta_j).
+\end{align*}
+
+Standardize: let $U = z_{ij} - \mu_{ij} \sim \mathcal{N}(0, 1)$. Then
+\[
+\Pr(z_{ij} > 0) = \Pr(U > -\mu_{ij}) = 1 - \Phi(-\mu_{ij}) = \Phi(\mu_{ij}),
+\]
+using symmetry of the standard normal CDF. Hence
+\[
+p(y_{ij} = 1 \mid \theta_i, \alpha_j, \beta_j) = \Phi(\mu_{ij}) = \Phi(\alpha_j(\theta_i - \beta_j)),
+\]
+which matches what we had in 1.1.
+
+\textit{Case B: $y_{ij} = 0$.}
+
+Similarly,
+\[
+p(y_{ij} = 0 \mid \theta_i, \alpha_j, \beta_j) = \int p(y_{ij} = 0 \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) \, dz_{ij}.
+\]
+
+Now $p(y_{ij} = 0 \mid z_{ij}) = \mathbf{1}(z_{ij} \le 0)$, so
+\begin{align*}
+p(y_{ij} = 0 \mid \theta_i, \alpha_j, \beta_j) &= \int_{-\infty}^0 \phi(z_{ij} - \mu_{ij}) \, dz_{ij}\\
+&= \Pr(z_{ij} \le 0 \mid \theta_i, \alpha_j, \beta_j).
+\end{align*}
+
+Again standardize $U = z_{ij} - \mu_{ij}$:
+\[
+\Pr(z_{ij} \le 0) = \Pr(U \le -\mu_{ij}) = \Phi(-\mu_{ij}) = 1 - \Phi(\mu_{ij}),
+\]
+so
+\[
+p(y_{ij} = 0 \mid \theta_i, \alpha_j, \beta_j) = 1 - \Phi(\alpha_j(\theta_i - \beta_j)).
+\]
+
+We can combine both cases into the Bernoulli-pmf form
+\[
+p(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = [\Phi(\alpha_j(\theta_i - \beta_j))]^{y_{ij}} \, [1 - \Phi(\alpha_j(\theta_i - \beta_j))]^{1 - y_{ij}}.
+\]
+
+Thus we have explicitly shown that
+\[
+\int p(y_{ij} \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) \, dz_{ij} = p(y_{ij} \mid \theta_i, \alpha_j, \beta_j).
+\]
+
+\textbf{Step 4: Plug back into the marginal.}
+
+Return to
+\[
+p(y, \alpha, \theta, \beta) = p(\theta) \, p(\beta) \, p(\alpha) \, \prod_{(i,j) \in O} \int p(y_{ij} \mid z_{ij}) \, p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) \, dz_{ij}.
+\]
+
+By the calculation above, each integral is $p(y_{ij} \mid \theta_i, \alpha_j, \beta_j)$, so
+\[
+p(y, \alpha, \theta, \beta) = p(\theta) \, p(\beta) \, p(\alpha) \, \prod_{(i,j) \in O} p(y_{ij} \mid \theta_i, \alpha_j, \beta_j),
+\]
+i.e.
+\[
+p(y, \alpha, \theta, \beta) = p(\theta) \, p(\beta) \, p(\alpha) \, \prod_{(i,j) \in O} [\Phi(\alpha_j(\theta_i - \beta_j))]^{y_{ij}} [1 - \Phi(\alpha_j(\theta_i - \beta_j))]^{1 - y_{ij}}.
+\]
+
+\textbf{Step 5: Make $p(y \mid \alpha, \theta, \beta)$ explicit.}
+
+By the definition of conditional density,
+\[
+p(y \mid \alpha, \theta, \beta) = \frac{p(y, \alpha, \theta, \beta)}{p(\alpha, \theta, \beta)} = \frac{p(y, \alpha, \theta, \beta)}{p(\theta) \, p(\beta) \, p(\alpha)}.
+\]
+
+Using the expression we just derived for $p(y, \alpha, \theta, \beta)$,
+\[
+p(y \mid \alpha, \theta, \beta) = \prod_{(i,j) \in O} p(y_{ij} \mid \theta_i, \alpha_j, \beta_j) = \prod_{(i,j) \in O} [\Phi(\alpha_j(\theta_i - \beta_j))]^{y_{ij}} [1 - \Phi(\alpha_j(\theta_i - \beta_j))]^{1 - y_{ij}}.
+\]
+
+Then, equivalently,
+\[
+p(y, \alpha, \theta, \beta) = p(\theta) \, p(\beta) \, p(\alpha) \, p(y \mid \alpha, \theta, \beta).
+\]
+
 \item \textbf{Variational family.} Assume a factorization
 \[
 q(\theta, \beta, \alpha, z) = \left(\prod_{i=1}^n q(\theta_i)\right) \left(\prod_{j=1}^d q(\beta_j) q(\alpha_j)\right) \left(\prod_{i=1}^n \prod_{j=1}^p q(z_{ij})\right),
