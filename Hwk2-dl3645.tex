@@ -184,6 +184,59 @@ p(\{y_{ij}\}_{(i,j)\in O} \mid \{\theta_i\}, \{\alpha_j, \beta_j\}) = \prod_{(i,
 \item \textbf{Sketch:} Draw a 1D lineshowing senators at positions $\theta_i$, bills at positions $\beta_j$, and explain the threshold rule with a simple picture.
 
 \item \textbf{Setting the Prior:} Suppose you choose a zero-centered prior for $\theta_i$ and $\beta_j$. How would you choose the prior variance(s) using the held-out data?
+
+\textbf{1. Specify the priors with unknown variances.} Choose zero-centered Gaussian priors for the latent senator and bill locations:
+\begin{align*}
+\theta_i &\sim \mathcal{N}(0, \sigma^2_\theta), \quad i = 1, \ldots, N_{\text{sen}},\\
+\beta_j &\sim \mathcal{N}(0, \sigma^2_\beta), \quad j = 1, \ldots, N_{\text{bill}}.
+\end{align*}
+Treat $\sigma^2_\theta, \sigma^2_\beta$ as hyperparameters that we will choose using the held-out votes.
+
+\textbf{2. Split the data: training vs held-out.} Let $O$ be the set of observed (non-missing) votes as before, and split it into
+\begin{itemize}
+\item a training set $O_{\text{train}}$,
+\item a held-out set $O_{\text{val}}$,
+\end{itemize}
+with $O_{\text{train}} \cap O_{\text{val}} = \emptyset$ and $O_{\text{train}} \cup O_{\text{val}} = O$.
+
+We will fit the model on $O_{\text{train}}$ for each candidate choice of $(\sigma^2_\theta, \sigma^2_\beta)$, and evaluate predictive performance on $O_{\text{val}}$.
+
+\textbf{3. For fixed variances, fit $\theta, \beta$ on the training set.} Recall the Bernoulli form (from your previous part):
+\begin{align*}
+p_{ij}(\theta_i, \beta_j) &:= \Pr(y_{ij} = 1 \mid \theta_i, \alpha_j, \beta_j) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big),\\
+\Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) &= p_{ij}^{\,y_{ij}} (1 - p_{ij})^{1 - y_{ij}}.
+\end{align*}
+For a fixed pair $(\sigma^2_\theta, \sigma^2_\beta)$, the training log-posterior (up to an additive constant) is
+\begin{align*}
+\ell_{\text{train}}(\theta, \beta \mid \sigma^2_\theta, \sigma^2_\beta) &= \sum_{(i,j) \in O_{\text{train}}} \left[ y_{ij} \log p_{ij}(\theta_i, \beta_j) + (1 - y_{ij}) \log(1 - p_{ij}(\theta_i, \beta_j)) \right]\\
+&\quad - \frac{1}{2\sigma^2_\theta} \sum_i \theta_i^2 - \frac{1}{2\sigma^2_\beta} \sum_j \beta_j^2.
+\end{align*}
+For that choice of $(\sigma^2_\theta, \sigma^2_\beta)$, compute the MAP estimates
+\[
+\hat{\theta}(\sigma^2_\theta, \sigma^2_\beta), \quad \hat{\beta}(\sigma^2_\theta, \sigma^2_\beta)
+\]
+by maximizing $\ell_{\text{train}}$.
+
+\textbf{4. Compute held-out predictive log-likelihood.} Using $\hat{\theta}, \hat{\beta}$, compute predicted probabilities on held-out pairs:
+\[
+\hat{p}_{ij} := \Phi\!\big(\alpha_j(\hat{\theta}_i - \hat{\beta}_j)\big), \quad (i,j) \in O_{\text{val}}.
+\]
+The held-out log-likelihood for this choice of variances is
+\[
+L_{\text{val}}(\sigma^2_\theta, \sigma^2_\beta) := \sum_{(i,j) \in O_{\text{val}}} \left[ y_{ij} \log \hat{p}_{ij} + (1 - y_{ij}) \log(1 - \hat{p}_{ij}) \right].
+\]
+
+\textbf{5. Choose the prior variances by maximizing held-out performance.} Finally, treat $\sigma^2_\theta, \sigma^2_\beta$ as tuning parameters and choose them to maximize the held-out log-likelihood:
+\[
+(\sigma^{2*}_\theta, \sigma^{2*}_\beta) = \arg\max_{(\sigma^2_\theta, \sigma^2_\beta)} L_{\text{val}}(\sigma^2_\theta, \sigma^2_\beta).
+\]
+In practice you would:
+\begin{itemize}
+\item pick a grid of candidate values for $\sigma^2_\theta$ and $\sigma^2_\beta$,
+\item for each pair, fit MAP $\hat{\theta}, \hat{\beta}$ on $O_{\text{train}}$,
+\item compute $L_{\text{val}}$,
+\item select the pair that yields the largest $L_{\text{val}}$.
+\end{itemize}
 \end{enumerate}
 
 \newpage
@@ -210,6 +263,43 @@ Right now, the latent parameters $\theta_i, \beta_j, \alpha_j$ are free-floating
 (\theta_i - \beta_j) = (\theta_i + c) - (\beta_j + c),
 \]
 the likelihood is unchanged. What does this mean about the absolute location of the ideological axis?
+
+We already have, from 1.1, for each $(i,j)$,
+\[
+\Pr(y_{ij}=1 \mid \theta_i,\alpha_j,\beta_j) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big),
+\]
+and
+\[
+\Pr(y_{ij}=0 \mid \theta_i,\alpha_j,\beta_j) = 1 - \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big).
+\]
+So the likelihood depends on the parameters only through the term $\alpha_j(\theta_i - \beta_j)$.
+
+\textbf{Show translation invariance.} Consider a constant $c \in \mathbb{R}$ and define transformed parameters
+\[
+\theta_i' = \theta_i + c, \qquad \beta_j' = \beta_j + c, \qquad \alpha_j' = \alpha_j.
+\]
+Compute the transformed difference:
+\[
+\theta_i' - \beta_j' = (\theta_i + c) - (\beta_j + c) = \theta_i - \beta_j.
+\]
+Then the probit argument under the transformed parameters is
+\[
+\alpha_j'(\theta_i' - \beta_j') = \alpha_j(\theta_i - \beta_j),
+\]
+so the ``yea'' probability is unchanged:
+\[
+\Pr(y_{ij}=1 \mid \theta_i',\alpha_j',\beta_j') = \Phi\!\big(\alpha_j'(\theta_i' - \beta_j')\big) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big) = \Pr(y_{ij}=1 \mid \theta_i,\alpha_j,\beta_j).
+\]
+The same holds for $\Pr(y_{ij}=0\mid\cdot)$, so for each $(i,j)$,
+\[
+\Pr(y_{ij}\mid \theta_i',\alpha_j',\beta_j') = \Pr(y_{ij}\mid \theta_i,\alpha_j,\beta_j).
+\]
+Because the joint likelihood is the product over $(i,j)$ of these terms, the entire likelihood is unchanged by the transformation
+\[
+\theta_i \mapsto \theta_i + c, \qquad \beta_j \mapsto \beta_j + c, \qquad \alpha_j \text{ unchanged}.
+\]
+
+This shows that the absolute location (origin) of the ideological axis is not identified by the data: only relative positions $\theta_i - \beta_j$ matter. In other words, the model can only recover ideologies and bill locations up to an additive constant; choosing where ``0'' is on the axis is a matter of convention (e.g., setting $\mu_\theta=0$, or fixing one $\beta_j=0$).
 
 \item \textbf{Scaling:} Show that if we multiply all senator and bill positions by $k > 0$ and divide all discriminations by $k$,
 \[
