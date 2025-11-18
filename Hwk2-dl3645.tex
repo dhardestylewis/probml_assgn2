@@ -370,6 +370,74 @@ In this section you will derive CAVI updates for this model.
 \begin{enumerate}[label=\alph*)]
 \item \textbf{Joint distribution:} Using the priors on the previous question write down the joint distribution $p(y, z, \alpha, \theta, \beta)$.
 
+\textbf{Model pieces.} From before, for each pair $(i,j)$:
+\begin{align*}
+z_{ij} &= \alpha_j(\theta_i - \beta_j) + \varepsilon_{ij}, \qquad \varepsilon_{ij} \sim \mathcal{N}(0,1),\\
+y_{ij} &= \mathbb{1}(z_{ij} > 0).
+\end{align*}
+
+\textbf{Priors:}
+
+Senators' ideologies:
+\[
+\theta_i \sim \mathcal{N}(\mu_\theta, \sigma^2_\theta), \quad i = 1, \ldots, N.
+\]
+
+Bills' locations:
+\[
+\beta_j \sim \mathcal{N}(\mu_\beta, \sigma^2_\beta), \quad j = 1, \ldots, J.
+\]
+
+Bills' discriminations:
+\[
+\alpha_j \sim \mathcal{N}(\mu_\alpha, \sigma^2_\alpha), \quad j = 1, \ldots, J.
+\]
+
+For CAVI, it is convenient to make explicit the conditional distributions:
+
+Latent utilities:
+\[
+z_{ij} \mid \theta_i, \alpha_j, \beta_j \sim \mathcal{N}\!\big(\alpha_j(\theta_i - \beta_j), \, 1\big).
+\]
+
+Observed votes are deterministic given $z_{ij}$:
+\[
+p(y_{ij} \mid z_{ij}) = \mathbb{1}\{y_{ij} = 1, \, z_{ij} > 0\} + \mathbb{1}\{y_{ij} = 0, \, z_{ij} \le 0\}.
+\]
+
+\textbf{Factorization of the joint.} Collect notation:
+\begin{align*}
+y &= \{y_{ij}\}, \quad z = \{z_{ij}\}, \quad \theta = \{\theta_i\}, \quad \beta = \{\beta_j\}, \quad \alpha = \{\alpha_j\}.
+\end{align*}
+
+Using conditional independence (given $\theta, \beta, \alpha$, all $z_{ij}$ are independent across $i,j$; given $z_{ij}$, the $y_{ij}$ are independent), the joint distribution factors as
+\[
+p(y, z, \alpha, \theta, \beta) = \left[\prod_{i=1}^N p(\theta_i)\right] \left[\prod_{j=1}^J p(\beta_j)\right] \left[\prod_{j=1}^J p(\alpha_j)\right] \left[\prod_{i=1}^N \prod_{j=1}^J p(z_{ij} \mid \theta_i, \alpha_j, \beta_j)\right] \left[\prod_{i=1}^N \prod_{j=1}^J p(y_{ij} \mid z_{ij})\right].
+\]
+
+Now plug in the specific normal and indicator forms:
+
+Priors:
+\[
+p(\theta_i) = \mathcal{N}(\theta_i \mid \mu_\theta, \sigma^2_\theta), \quad p(\beta_j) = \mathcal{N}(\beta_j \mid \mu_\beta, \sigma^2_\beta), \quad p(\alpha_j) = \mathcal{N}(\alpha_j \mid \mu_\alpha, \sigma^2_\alpha),
+\]
+
+Latent utilities:
+\[
+p(z_{ij} \mid \theta_i, \alpha_j, \beta_j) = \mathcal{N}\!\big(z_{ij} \mid \alpha_j(\theta_i - \beta_j), \, 1\big),
+\]
+
+Vote indicators:
+\[
+p(y_{ij} \mid z_{ij}) = \mathbb{1}\{y_{ij} = 1, \, z_{ij} > 0\} + \mathbb{1}\{y_{ij} = 0, \, z_{ij} \le 0\}.
+\]
+
+So the full joint is
+\begin{align*}
+p(y, z, \alpha, \theta, \beta) &= \left[\prod_{i=1}^N \mathcal{N}(\theta_i \mid \mu_\theta, \sigma^2_\theta)\right] \left[\prod_{j=1}^J \mathcal{N}(\beta_j \mid \mu_\beta, \sigma^2_\beta)\right] \left[\prod_{j=1}^J \mathcal{N}(\alpha_j \mid \mu_\alpha, \sigma^2_\alpha)\right]\\
+&\quad \times \left[\prod_{i=1}^N \prod_{j=1}^J \mathcal{N}\!\big(z_{ij} \mid \alpha_j(\theta_i - \beta_j), \, 1\big)\right] \left[\prod_{i=1}^N \prod_{j=1}^J p(y_{ij} \mid z_{ij})\right].
+\end{align*}
+
 \item \textbf{Latent utilities $z_{ij}$.} Recall that $z_{ij} \mid \theta_i, \beta_j, \alpha_j \sim \mathcal{N}(\alpha_j(\theta_i - \beta_j), 1)$. Show that conditioning on $y_{ij}$ leads to a truncated Normal:
 \[
 z_{ij} \mid y_{ij}, \theta, \beta, \alpha \sim
