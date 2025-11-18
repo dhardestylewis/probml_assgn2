@@ -1522,6 +1522,74 @@ $\mathbb{E}_q[\log q(\theta_i)]$, $\mathbb{E}_q[\log q(\beta_j)]$ as above in te
 
 \item \textbf{CAVI updates.} Using the identity $\log q^\star(x_v) \propto \mathbb{E}_{-v}[\log p(x_v \mid x_{-v})]$ and the \emph{given} complete conditionals 3 and 4, derive the optimal CAVI updates by replacing unknowns with their $q$-expectations. State the updates for $V^{-1}_{\theta_i}$, $V^{-1}_{\beta_j}$, $m_{\theta_i}$, and $m_{\beta_j}$.
 
+Let the mean-field family be
+\[
+q(\Theta, B) = \prod_{i=1}^n q(\theta_i) \prod_{j=1}^m q(\beta_j)
+\]
+with
+\[
+q(\theta_i) = \mathcal{N}(m_{\theta_i}, V_{\theta_i}), \quad q(\beta_j) = \mathcal{N}(m_{\beta_j}, V_{\beta_j}).
+\]
+
+Define the index sets
+\[
+\Omega_i := \{j : (i,j) \in \Omega\}, \quad \Omega_j := \{i : (i,j) \in \Omega\}.
+\]
+
+The given complete conditionals are
+\[
+p(\theta_i \mid \{\beta_j\}, X) = \mathcal{N}(\mu_{\theta_i}, \Sigma_{\theta_i}), \quad \Sigma_{\theta_i}^{-1} = \eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} \beta_j \beta_j^\top,
+\]
+\[
+\mu_{\theta_i} = \Sigma_{\theta_i}\,\sigma^{-2} \sum_{j \in \Omega_i} \beta_j x_{ij},
+\]
+and
+\[
+p(\beta_j \mid \{\theta_i\}, X) = \mathcal{N}(\mu_{\beta_j}, \Sigma_{\beta_j}), \quad \Sigma_{\beta_j}^{-1} = \eta_B^{-2} I_K + \sigma^{-2} \sum_{i \in \Omega_j} \theta_i \theta_i^\top,
+\]
+\[
+\mu_{\beta_j} = \Sigma_{\beta_j}\,\sigma^{-2} \sum_{i \in \Omega_j} \theta_i x_{ij}.
+\]
+
+Using
+\[
+\log q^\star(x_v) \propto \mathbb{E}_{-v}[\log p(x_v \mid x_{-v})],
+\]
+the optimal variational factor has the same Gaussian form, with each occurrence of $\beta_j$, $\beta_j \beta_j^\top$ and $\theta_i$, $\theta_i \theta_i^\top$ replaced by their expectations under $q$.
+
+Because
+\[
+\mathbb{E}_q[\beta_j] = m_{\beta_j}, \quad \mathbb{E}_q[\beta_j \beta_j^\top] = V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top,
+\]
+\[
+\mathbb{E}_q[\theta_i] = m_{\theta_i}, \quad \mathbb{E}_q[\theta_i \theta_i^\top] = V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top,
+\]
+the CAVI updates are:
+
+\textbf{User factors $\theta_i$:}
+
+\textit{Precision:}
+\[
+V_{\theta_i}^{-1} = \eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} \mathbb{E}_q[\beta_j \beta_j^\top] = \eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} (V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top).
+\]
+
+\textit{Mean:}
+\[
+m_{\theta_i} = V_{\theta_i}\,\sigma^{-2} \sum_{j \in \Omega_i} \mathbb{E}_q[\beta_j]\,x_{ij} = V_{\theta_i}\,\sigma^{-2} \sum_{j \in \Omega_i} m_{\beta_j}\,x_{ij}.
+\]
+
+\textbf{Item factors $\beta_j$:}
+
+\textit{Precision:}
+\[
+V_{\beta_j}^{-1} = \eta_B^{-2} I_K + \sigma^{-2} \sum_{i \in \Omega_j} \mathbb{E}_q[\theta_i \theta_i^\top] = \eta_B^{-2} I_K + \sigma^{-2} \sum_{i \in \Omega_j} (V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top).
+\]
+
+\textit{Mean:}
+\[
+m_{\beta_j} = V_{\beta_j}\,\sigma^{-2} \sum_{i \in \Omega_j} \mathbb{E}_q[\theta_i]\,x_{ij} = V_{\beta_j}\,\sigma^{-2} \sum_{i \in \Omega_j} m_{\theta_i}\,x_{ij}.
+\]
+
 \item \textbf{Algorithm sketch.} Give pseudocode for one CAVI sweep:
 \[
 \{q(\theta_i)\}_{i=1}^n \to \{q(\beta_j)\}_{j=1}^m,
