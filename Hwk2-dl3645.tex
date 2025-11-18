@@ -563,6 +563,123 @@ Pairs $(i,j)$ with $y_{ij} = -1$ are not in $O$, so they do not appear in this p
 
 \item \textbf{Senator positions $\theta_i$.} Derive the conditional distribution of $\theta_i$ given $z, \beta, \alpha$ under your chosen prior from 2.1. Show it is Gaussian, and write down its mean and variance.
 
+\textbf{Step 1: Write the conditional for a single senator $i$.}
+
+Prior (from 2.1):
+\[
+\theta_i \sim \mathcal{N}(\mu_\theta, \sigma^2_\theta), \quad \text{independently across } i.
+\]
+
+Latent utilities (for all bills $j$ with a non-missing vote from senator $i$):
+\[
+z_{ij} \mid \theta_i, \beta_j, \alpha_j \sim \mathcal{N}(\mu_{ij}, 1), \qquad \mu_{ij} := \alpha_j(\theta_i - \beta_j).
+\]
+
+Define the set of bills for which senator $i$ has a non-missing vote:
+\[
+O_i := \{j : (i,j) \in O\}.
+\]
+
+Conditional on $z, \beta, \alpha$, the full conditional for $\theta_i$ is
+\[
+p(\theta_i \mid z, \beta, \alpha) \;\propto\; p(\theta_i)\, \prod_{j \in O_i} p(z_{ij} \mid \theta_i, \beta_j, \alpha_j).
+\]
+
+Plug in the Gaussian forms:
+
+Prior:
+\[
+p(\theta_i) \propto \exp\!\left\{-\frac{1}{2\sigma^2_\theta}(\theta_i - \mu_\theta)^2\right\}.
+\]
+
+Likelihood terms (for each $j \in O_i$):
+\[
+p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) \propto \exp\!\left\{-\frac{1}{2}(z_{ij} - \alpha_j(\theta_i - \beta_j))^2\right\}.
+\]
+
+Thus
+\[
+p(\theta_i \mid z, \beta, \alpha) \;\propto\; \exp\!\left\{-\frac{1}{2\sigma^2_\theta}(\theta_i - \mu_\theta)^2 - \frac{1}{2}\sum_{j \in O_i} (z_{ij} - \alpha_j(\theta_i - \beta_j))^2\right\}.
+\]
+
+We now show this kernel is Gaussian in $\theta_i$ by expanding the exponent and completing the square.
+
+\textbf{Step 2: Expand the quadratic in $\theta_i$.}
+
+First expand the prior term:
+\[
+-\frac{1}{2\sigma^2_\theta}(\theta_i - \mu_\theta)^2 = -\frac{1}{2\sigma^2_\theta}(\theta_i^2 - 2\mu_\theta \theta_i + \mu_\theta^2).
+\]
+
+Next expand each likelihood term. Rewrite the mean:
+\[
+z_{ij} - \alpha_j(\theta_i - \beta_j) = z_{ij} - \alpha_j \theta_i + \alpha_j \beta_j = \alpha_j \theta_i - (z_{ij} + \alpha_j \beta_j)\,(-1),
+\]
+so
+\[
+(z_{ij} - \alpha_j(\theta_i - \beta_j))^2 = (\alpha_j \theta_i - (z_{ij} + \alpha_j \beta_j))^2 = \alpha_j^2 \theta_i^2 - 2\alpha_j \theta_i (z_{ij} + \alpha_j \beta_j) + (z_{ij} + \alpha_j \beta_j)^2.
+\]
+
+Sum over $j \in O_i$:
+\begin{align*}
+\sum_{j \in O_i} (z_{ij} - \alpha_j(\theta_i - \beta_j))^2 &= \left(\sum_{j \in O_i} \alpha_j^2\right) \theta_i^2 - 2\theta_i \sum_{j \in O_i} \alpha_j(z_{ij} + \alpha_j \beta_j) + \sum_{j \in O_i} (z_{ij} + \alpha_j \beta_j)^2.
+\end{align*}
+
+Now the exponent in $p(\theta_i \mid \cdot)$ is
+\begin{align*}
+\log p(\theta_i \mid z, \beta, \alpha) &= \text{const} - \frac{1}{2\sigma^2_\theta}(\theta_i^2 - 2\mu_\theta \theta_i + \mu_\theta^2) - \frac{1}{2}\sum_{j \in O_i} (z_{ij} - \alpha_j(\theta_i - \beta_j))^2\\
+&= \text{const} - \frac{1}{2}\left[\left(\frac{1}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j^2\right) \theta_i^2 - 2\theta_i\left(\frac{\mu_\theta}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j(z_{ij} + \alpha_j \beta_j)\right)\right],
+\end{align*}
+where ``const'' collects all terms independent of $\theta_i$.
+
+Define the posterior precision and linear term:
+\[
+A_i := \frac{1}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j^2, \qquad B_i := \frac{\mu_\theta}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j(z_{ij} + \alpha_j \beta_j).
+\]
+
+Then
+\[
+\log p(\theta_i \mid z, \beta, \alpha) = \text{const} - \frac{1}{2}(A_i \theta_i^2 - 2B_i \theta_i).
+\]
+
+\textbf{Step 3: Complete the square and identify the Gaussian.}
+
+Write the quadratic in completed-square form:
+\[
+A_i \theta_i^2 - 2B_i \theta_i = A_i\left(\theta_i^2 - 2\frac{B_i}{A_i}\theta_i\right) = A_i\left(\theta_i - \frac{B_i}{A_i}\right)^2 - A_i\left(\frac{B_i}{A_i}\right)^2.
+\]
+
+So
+\[
+\log p(\theta_i \mid z, \beta, \alpha) = \text{const}' - \frac{A_i}{2}\left(\theta_i - \frac{B_i}{A_i}\right)^2,
+\]
+where $\text{const}'$ is another constant not depending on $\theta_i$.
+
+This is exactly the kernel of a Normal distribution with
+
+variance
+\[
+\text{Var}(\theta_i \mid z, \beta, \alpha) = A_i^{-1} = \left(\frac{1}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j^2\right)^{-1},
+\]
+
+mean
+\[
+\mathbb{E}[\theta_i \mid z, \beta, \alpha] = \frac{B_i}{A_i} = \left(\frac{1}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j^2\right)^{-1} \left(\frac{\mu_\theta}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j(z_{ij} + \alpha_j \beta_j)\right).
+\]
+
+For each senator $i$, the conditional distribution of $\theta_i$ given $z, \beta, \alpha$ is Gaussian:
+\[
+\theta_i \mid z, \beta, \alpha \sim \mathcal{N}(m_{\theta_i}, v_{\theta_i}),
+\]
+with
+\[
+v_{\theta_i} = \left(\frac{1}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j^2\right)^{-1},
+\]
+\[
+m_{\theta_i} = v_{\theta_i}\left(\frac{\mu_\theta}{\sigma^2_\theta} + \sum_{j \in O_i} \alpha_j(z_{ij} + \alpha_j \beta_j)\right),
+\]
+where $O_i = \{j : (i,j) \in O\}$ indexes the bills on which senator $i$ cast a non-missing vote.
+
 \item \textbf{Bill locations $\beta_j$.} Derive the conditional distribution of $\beta_j$ given $z, \theta, \alpha$ under your chosen prior from 2.1. Show it is Gaussian, and write down its mean and variance.
 
 \item \textbf{Bill discriminations $\alpha_j$.} Assume the prior you proposed in 2.1 for $\alpha_j$. Derive the conditional distribution of $\alpha_j$ given $z, \theta, \beta$. If you chose a Normal prior, it will be Normal; if you chose a truncated Normal prior, it will be truncated Normal (see Useful Formulas for information on the Truncated Normal).
