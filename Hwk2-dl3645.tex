@@ -1160,6 +1160,234 @@ derive expressions for the optimal factors up to Normal/truncated Normal forms. 
 \item $q(\theta_i)$ and $q(\beta_j)$: write the precision and mean in terms of expectations $\mathbb{E}_q[\alpha_j]$, $\mathbb{E}_q[\alpha_j^2]$, and $\mathbb{E}_q[z_{ij}]$.
 \item $q(\alpha_j)$: treat $\{z_{ij}\}_{i=1}^n$ as responses in a linear regression on $(\theta_i - \beta_j)$. Write the resulting mean and variance, and note how the update changes.
 \end{enumerate}
+
+Throughout, let
+\begin{itemize}
+\item $O = \{(i,j) : y_{ij} \in \{0,1\}\}$ be the set of observed votes,
+\item $O_i = \{j : (i,j) \in O\}$ votes observed for senator $i$,
+\item $O_j = \{i : (i,j) \in O\}$ votes observed on bill $j$.
+\end{itemize}
+
+We also keep the priors
+\[
+\theta_i \sim \mathcal{N}(\mu_\theta, \sigma_\theta^2), \quad \beta_j \sim \mathcal{N}(\mu_\beta, \sigma_\beta^2), \quad \alpha_j \sim \mathcal{N}(\mu_\alpha, \sigma_\alpha^2).
+\]
+
+The augmented model has, for $(i,j) \in O$,
+\[
+z_{ij} \mid \theta_i, \beta_j, \alpha_j \sim \mathcal{N}(\mu_{ij}, 1), \quad \mu_{ij} := \alpha_j(\theta_i - \beta_j),
+\]
+\[
+y_{ij} = \mathbf{1}(z_{ij} > 0), \quad y_{ij} \in \{0,1\}.
+\]
+
+The variational family factorizes as
+\[
+q(\theta, \beta, \alpha, z) = \left(\prod_i q(\theta_i)\right) \left(\prod_j q(\beta_j)\,q(\alpha_j)\right) \left(\prod_{(i,j) \in O} q(z_{ij})\right).
+\]
+
+We use the standard CAVI identity
+\[
+\log q^*(v) \propto \mathbb{E}_{-v}[\log p(y, z, \theta, \beta, \alpha)].
+\]
+
+\textbf{(i) Update for $q(z_{ij})$.}
+
+We isolate terms of the joint that involve a given $z_{ij}$:
+\[
+\log p(y, z, \theta, \beta, \alpha) = \log p(y_{ij} \mid z_{ij}) + \log p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) + \text{(terms not involving $z_{ij}$)}.
+\]
+
+So
+\[
+\log q^*(z_{ij}) \propto \mathbb{E}_{-z_{ij}}[\log p(y_{ij} \mid z_{ij})] + \mathbb{E}_{-z_{ij}}[\log p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)].
+\]
+
+The likelihood term enforces the truncation:
+\begin{itemize}
+\item If $y_{ij} = 1$, support is $z_{ij} > 0$,
+\item If $y_{ij} = 0$, support is $z_{ij} \le 0$.
+\end{itemize}
+
+Within that support, $\log p(y_{ij} \mid z_{ij})$ is constant in $z_{ij}$.
+
+The Gaussian prior conditional:
+\[
+p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) = \mathcal{N}(z_{ij} \mid \mu_{ij}, 1), \quad \mu_{ij} = \alpha_j(\theta_i - \beta_j).
+\]
+
+Ignoring constants in $z_{ij}$, we have inside the support
+\[
+\log q^*(z_{ij}) \propto \mathbb{E}_{-z_{ij}}\left[-\frac{1}{2}(z_{ij} - \mu_{ij})^2\right] = -\frac{1}{2}\left(z_{ij}^2 - 2z_{ij}\,\mathbb{E}_q[\mu_{ij}]\right) + \text{const}.
+\]
+
+Thus, up to truncation, the optimal factor is a Normal with
+\[
+\bar{\mu}_{ij} := \mathbb{E}_q[\mu_{ij}] = \mathbb{E}_q[\alpha_j(\theta_i - \beta_j)].
+\]
+
+Under the mean-field factorization,
+\[
+\mathbb{E}_q[\alpha_j(\theta_i - \beta_j)] = \mathbb{E}_q[\alpha_j]\,(\mathbb{E}_q[\theta_i] - \mathbb{E}_q[\beta_j]).
+\]
+
+So
+\[
+q(z_{ij}) \propto \mathcal{N}(z_{ij} \mid \bar{\mu}_{ij}, 1) \times \begin{cases}
+\mathbf{1}(z_{ij} > 0), & y_{ij} = 1,\\
+\mathbf{1}(z_{ij} \le 0), & y_{ij} = 0.
+\end{cases}
+\]
+
+That is,
+\begin{itemize}
+\item If $y_{ij} = 1$: $q(z_{ij})$ is $\mathcal{N}(\bar{\mu}_{ij}, 1)$ truncated to $(0,\infty)$.
+\item If $y_{ij} = 0$: $q(z_{ij})$ is $\mathcal{N}(\bar{\mu}_{ij}, 1)$ truncated to $(-\infty,0]$.
+\end{itemize}
+
+\textbf{Moment $\mathbb{E}_q[z_{ij}]$.}
+
+Let $\phi(\cdot)$ and $\Phi(\cdot)$ be the standard Normal pdf and cdf.
+\begin{itemize}
+\item If $y_{ij} = 1$ (truncate to $(0,\infty)$):
+\[
+\mathbb{E}_q[z_{ij}] = \bar{\mu}_{ij} + \frac{\phi(\bar{\mu}_{ij})}{\Phi(\bar{\mu}_{ij})}.
+\]
+\item If $y_{ij} = 0$ (truncate to $(-\infty,0]$):
+\[
+\mathbb{E}_q[z_{ij}] = \bar{\mu}_{ij} - \frac{\phi(\bar{\mu}_{ij})}{1 - \Phi(\bar{\mu}_{ij})}.
+\]
+\end{itemize}
+
+These are the standard first moments for a Normal($\bar{\mu}_{ij}, 1$) truncated above or below at 0, respectively.
+
+\textbf{(ii) Updates for $q(\theta_i)$ and $q(\beta_j)$.}
+
+\textit{$q(\theta_i)$.}
+
+We collect all terms involving $\theta_i$: the prior and the likelihood pieces for $z_{ij}$ with $j \in O_i$.
+\[
+\log p(\theta_i \mid \cdot) \propto \log p(\theta_i) + \sum_{j \in O_i} \log p(z_{ij} \mid \theta_i, \beta_j, \alpha_j).
+\]
+
+Using
+\[
+p(\theta_i) = \mathcal{N}(\theta_i \mid \mu_\theta, \sigma_\theta^2), \quad p(z_{ij} \mid \theta_i, \beta_j, \alpha_j) = \mathcal{N}(z_{ij} \mid \alpha_j(\theta_i - \beta_j), 1),
+\]
+we can write
+\[
+\log q^*(\theta_i) \propto -\frac{1}{2\sigma_\theta^2}(\theta_i - \mu_\theta)^2 - \frac{1}{2}\sum_{j \in O_i} (z_{ij} - \alpha_j(\theta_i - \beta_j))^2.
+\]
+
+Expand the quadratic in $\theta_i$, then take expectation over $\alpha_j, \beta_j, z_{ij}$ (all independent of $\theta_i$ under $q$). The resulting form is
+\[
+\log q^*(\theta_i) = -\frac{1}{2}\,\lambda_{\theta_i}\,\theta_i^2 + \eta_{\theta_i}\,\theta_i + \text{const},
+\]
+with
+\[
+\lambda_{\theta_i} = \frac{1}{\sigma_\theta^2} + \sum_{j \in O_i} \mathbb{E}_q[\alpha_j^2],
+\]
+\[
+\eta_{\theta_i} = \frac{\mu_\theta}{\sigma_\theta^2} + \sum_{j \in O_i} (\mathbb{E}_q[\alpha_j]\,\mathbb{E}_q[z_{ij}] + \mathbb{E}_q[\alpha_j^2]\,\mathbb{E}_q[\beta_j]).
+\]
+
+Thus $q(\theta_i)$ is Normal,
+\[
+q(\theta_i) = \mathcal{N}(m_{\theta_i}, v_{\theta_i}),
+\]
+with
+\[
+v_{\theta_i} = \lambda_{\theta_i}^{-1}, \quad m_{\theta_i} = v_{\theta_i}\,\eta_{\theta_i}.
+\]
+
+So the update for $q(\theta_i)$ uses the moments $\mathbb{E}_q[\alpha_j]$, $\mathbb{E}_q[\alpha_j^2]$, $\mathbb{E}_q[z_{ij}]$, and $\mathbb{E}_q[\beta_j]$.
+
+\textit{$q(\beta_j)$.}
+
+Similarly, for each bill $j$, collect terms involving $\beta_j$: its prior and the likelihood pieces for $z_{ij}$ with $i \in O_j$:
+\[
+\log p(\beta_j \mid \cdot) \propto \log p(\beta_j) + \sum_{i \in O_j} \log p(z_{ij} \mid \theta_i, \beta_j, \alpha_j).
+\]
+
+With
+\[
+p(\beta_j) = \mathcal{N}(\beta_j \mid \mu_\beta, \sigma_\beta^2),
+\]
+and the same Normal likelihood, expanding in $\beta_j$ and taking expectations gives
+\[
+\log q^*(\beta_j) = -\frac{1}{2}\,\lambda_{\beta_j}\,\beta_j^2 + \eta_{\beta_j}\,\beta_j + \text{const},
+\]
+where
+\[
+\lambda_{\beta_j} = \frac{1}{\sigma_\beta^2} + \sum_{i \in O_j} \mathbb{E}_q[\alpha_j^2],
+\]
+\[
+\eta_{\beta_j} = \frac{\mu_\beta}{\sigma_\beta^2} + \sum_{i \in O_j} (\mathbb{E}_q[\alpha_j^2]\,\mathbb{E}_q[\theta_i] - \mathbb{E}_q[\alpha_j]\,\mathbb{E}_q[z_{ij}]).
+\]
+
+Thus
+\[
+q(\beta_j) = \mathcal{N}(m_{\beta_j}, v_{\beta_j}),
+\]
+with
+\[
+v_{\beta_j} = \lambda_{\beta_j}^{-1}, \quad m_{\beta_j} = v_{\beta_j}\,\eta_{\beta_j}.
+\]
+
+Again, the update depends on $\mathbb{E}_q[\alpha_j]$, $\mathbb{E}_q[\alpha_j^2]$, $\mathbb{E}_q[z_{ij}]$, $\mathbb{E}_q[\theta_i]$.
+
+\textbf{(iii) Update for $q(\alpha_j)$.}
+
+For a fixed bill $j$, the terms involving $\alpha_j$ are its prior and the likelihood contributions $p(z_{ij} \mid \theta_i, \beta_j, \alpha_j)$ for $i \in O_j$:
+\[
+\log p(\alpha_j \mid \cdot) \propto \log p(\alpha_j) + \sum_{i \in O_j} \log p(z_{ij} \mid \theta_i, \beta_j, \alpha_j).
+\]
+
+Using the Normal prior
+\[
+p(\alpha_j) = \mathcal{N}(\alpha_j \mid \mu_\alpha, \sigma_\alpha^2),
+\]
+and writing the likelihood as a linear regression:
+\[
+z_{ij} = \alpha_j x_{ij} + \varepsilon_{ij}, \quad x_{ij} := \theta_i - \beta_j, \quad \varepsilon_{ij} \sim \mathcal{N}(0, 1),
+\]
+the log-likelihood term is
+\[
+\sum_{i \in O_j} \log \mathcal{N}(z_{ij} \mid \alpha_j x_{ij}, 1) \propto -\frac{1}{2}\sum_{i \in O_j} (z_{ij} - \alpha_j x_{ij})^2.
+\]
+
+Expanding in $\alpha_j$ and taking expectation over $z_{ij}, \theta_i, \beta_j$ (but not $\alpha_j$) gives
+\[
+\log q^*(\alpha_j) = -\frac{1}{2}\,\lambda_{\alpha_j}\,\alpha_j^2 + \eta_{\alpha_j}\,\alpha_j + \text{const},
+\]
+where
+\[
+\lambda_{\alpha_j} = \frac{1}{\sigma_\alpha^2} + \sum_{i \in O_j} \mathbb{E}_q[x_{ij}^2], \quad x_{ij} = \theta_i - \beta_j,
+\]
+\[
+\eta_{\alpha_j} = \frac{\mu_\alpha}{\sigma_\alpha^2} + \sum_{i \in O_j} \mathbb{E}_q[z_{ij} x_{ij}].
+\]
+
+Under the mean-field factorization, $z_{ij}$, $\theta_i$, and $\beta_j$ are independent under $q$, so
+\[
+\mathbb{E}_q[x_{ij}] = \mathbb{E}_q[\theta_i] - \mathbb{E}_q[\beta_j],
+\]
+\[
+\mathbb{E}_q[x_{ij}^2] = \mathbb{E}_q[\theta_i^2] - 2\,\mathbb{E}_q[\theta_i]\,\mathbb{E}_q[\beta_j] + \mathbb{E}_q[\beta_j^2],
+\]
+\[
+\mathbb{E}_q[z_{ij} x_{ij}] = \mathbb{E}_q[z_{ij}]\,(\mathbb{E}_q[\theta_i] - \mathbb{E}_q[\beta_j]).
+\]
+
+So $q(\alpha_j)$ is Gaussian in the unconstrained case:
+\[
+q(\alpha_j) = \mathcal{N}(m_{\alpha_j}, v_{\alpha_j}),
+\]
+with
+\[
+v_{\alpha_j} = \lambda_{\alpha_j}^{-1}, \quad m_{\alpha_j} = v_{\alpha_j}\,\eta_{\alpha_j}.
+\]
+
 \end{enumerate}
 
 \newpage
