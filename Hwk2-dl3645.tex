@@ -1596,6 +1596,101 @@ m_{\beta_j} = V_{\beta_j}\,\sigma^{-2} \sum_{i \in \Omega_j} \mathbb{E}_q[\theta
 \]
 including which expectations are recomputed and a convergence criterion (e.g., ELBO monotone ascent or small parameter change).
 
+\textbf{INPUT:}
+\begin{itemize}
+\item $X$ -- ratings matrix (with missing entries)
+\item $\Omega$ -- set of observed indices $(i, j)$
+\item $\Omega_i$ -- for each $i$, $\Omega_i = \{j : (i, j) \in \Omega\}$
+\item $\Omega_j$ -- for each $j$, $\Omega_j = \{i : (i, j) \in \Omega\}$
+\item $\sigma^2$ -- noise variance
+\item $\eta_\theta^2, \eta_B^2$ -- prior variances
+\item $K$ -- latent dimension
+\item $\texttt{tol}$ -- convergence tolerance (e.g., $10^{-4}$)
+\item $\texttt{max\_iters}$ -- maximum CAVI iterations
+\end{itemize}
+
+\textbf{INITIALIZE:}
+\begin{itemize}
+\item For $i = 1$ to $n$:
+\begin{itemize}
+\item $m_{\theta_i} \gets$ random $K$-vector
+\item $V_{\theta_i} \gets I_K$ ($K \times K$ matrix)
+\end{itemize}
+\item For $j = 1$ to $m$:
+\begin{itemize}
+\item $m_{\beta_j} \gets$ random $K$-vector
+\item $V_{\beta_j} \gets I_K$
+\end{itemize}
+\end{itemize}
+
+\textbf{REPEAT} for $t = 1, 2, \ldots, \texttt{max\_iters}$:
+
+\quad \textit{// Store old means for convergence check}
+
+\quad $m_{\theta}^{\text{old}} \gets \{m_{\theta_i}\}$ for all $i$
+
+\quad $m_{\beta}^{\text{old}} \gets \{m_{\beta_j}\}$ for all $j$
+
+\quad \textbf{1. Compute expectations under $q(\beta_j)$ for current iteration}
+
+\quad For $j = 1$ to $m$:
+\begin{itemize}
+\item $\mathbb{E}_\beta[j] \gets m_{\beta_j}$ \quad \textit{// $\mathbb{E}_q[\beta_j]$}
+\item $\mathbb{E}_{\beta\text{-outer}}[j] \gets V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top$ \quad \textit{// $\mathbb{E}_q[\beta_j \beta_j^\top]$}
+\end{itemize}
+
+\quad \textbf{2. Update $q(\theta_i)$ block}
+
+\quad For $i = 1$ to $n$:
+\begin{itemize}
+\item $\text{Prec}_{\theta_i} \gets \eta_\theta^{-2} I_K$ \quad \textit{// precision (inverse covariance) of $\theta_i$}
+\item $b_{\theta_i} \gets \mathbf{0}_K$ \quad \textit{// linear term for $\theta_i$ mean}
+\item For each $j \in \Omega_i$:
+\begin{itemize}
+\item $\text{Prec}_{\theta_i} \gets \text{Prec}_{\theta_i} + \sigma^{-2} \mathbb{E}_{\beta\text{-outer}}[j]$
+\item $b_{\theta_i} \gets b_{\theta_i} + \sigma^{-2} \mathbb{E}_\beta[j] \cdot X[i, j]$
+\end{itemize}
+\item $V_{\theta_i} \gets \text{Prec}_{\theta_i}^{-1}$
+\item $m_{\theta_i} \gets V_{\theta_i} \cdot b_{\theta_i}$
+\end{itemize}
+
+\quad \textbf{3. Compute expectations under updated $q(\theta_i)$}
+
+\quad For $i = 1$ to $n$:
+\begin{itemize}
+\item $\mathbb{E}_\theta[i] \gets m_{\theta_i}$ \quad \textit{// $\mathbb{E}_q[\theta_i]$}
+\item $\mathbb{E}_{\theta\text{-outer}}[i] \gets V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top$ \quad \textit{// $\mathbb{E}_q[\theta_i \theta_i^\top]$}
+\end{itemize}
+
+\quad \textbf{4. Update $q(\beta_j)$ block}
+
+\quad For $j = 1$ to $m$:
+\begin{itemize}
+\item $\text{Prec}_{\beta_j} \gets \eta_B^{-2} I_K$ \quad \textit{// precision (inverse covariance) of $\beta_j$}
+\item $b_{\beta_j} \gets \mathbf{0}_K$ \quad \textit{// linear term for $\beta_j$ mean}
+\item For each $i \in \Omega_j$:
+\begin{itemize}
+\item $\text{Prec}_{\beta_j} \gets \text{Prec}_{\beta_j} + \sigma^{-2} \mathbb{E}_{\theta\text{-outer}}[i]$
+\item $b_{\beta_j} \gets b_{\beta_j} + \sigma^{-2} \mathbb{E}_\theta[i] \cdot X[i, j]$
+\end{itemize}
+\item $V_{\beta_j} \gets \text{Prec}_{\beta_j}^{-1}$
+\item $m_{\beta_j} \gets V_{\beta_j} \cdot b_{\beta_j}$
+\end{itemize}
+
+\quad \textbf{5. Convergence criterion}
+\begin{itemize}
+\item $\Delta_\theta \gets \max_i \|m_{\theta_i} - m_{\theta_i}^{\text{old}}\|_2$
+\item $\Delta_\beta \gets \max_j \|m_{\beta_j} - m_{\beta_j}^{\text{old}}\|_2$
+\item $\Delta \gets \max(\Delta_\theta, \Delta_\beta)$
+\item If $\Delta < \texttt{tol}$: \textbf{break}
+\end{itemize}
+
+\textbf{OUTPUT:}
+
+$\{m_{\theta_i}, V_{\theta_i}\}$ for $i = 1, \ldots, n$
+
+$\{m_{\beta_j}, V_{\beta_j}\}$ for $j = 1, \ldots, m$
+
 \item \textbf{Flagging uncertain recommendations} Using $q$ derive the approximate posterior predictive variance $\text{Var}(x_{ij} \mid \text{data})$ on a holdout set (i.e., $(i, j) \notin \Omega$) and explain how you would use this variance to flag uncertain recommendations.
 
 \item \textbf{Setting hyperparameters} Explain how you could set $\eta^2_\theta$, $\eta^2_B$, and $\sigma^2$ using heldout data.
