@@ -201,7 +201,7 @@ with $O_{\text{train}} \cap O_{\text{val}} = \emptyset$ and $O_{\text{train}} \c
 
 We will fit the model on $O_{\text{train}}$ for each candidate choice of $(\sigma^2_\theta, \sigma^2_\beta)$, and evaluate predictive performance on $O_{\text{val}}$.
 
-\textbf{3. For fixed variances, fit $\theta, \beta$ on the training set.} Recall the Bernoulli form (from the previous part):
+\textbf{3. For fixed variances, fit $\theta, \beta$ on the training set.} Recall the Bernoulli form:
 \begin{align*}
 p_{ij}(\theta_i, \beta_j) &:= \Pr(y_{ij} = 1 \mid \theta_i, \alpha_j, \beta_j) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big),\\
 \Pr(y_{ij} \mid \theta_i, \alpha_j, \beta_j) &= p_{ij}^{\,y_{ij}} (1 - p_{ij})^{1 - y_{ij}}.
@@ -306,6 +306,49 @@ This shows that the absolute location (origin) of the ideological axis is not id
 \alpha_j(\theta_i - \beta_j) = \frac{\alpha_j}{k}(k\theta_i - k\beta_j),
 \]
 the likelihood is unchanged. What does this mean about the scale of the ideological axis?
+
+We already know from 1.1 that, for each $(i,j)$,
+\[
+\Pr(y_{ij}=1 \mid \theta_i,\alpha_j,\beta_j) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big),
+\]
+\[
+\Pr(y_{ij}=0 \mid \theta_i,\alpha_j,\beta_j) = 1 - \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big).
+\]
+So again the likelihood depends on the parameters only through the product
+\[
+\alpha_j(\theta_i - \beta_j).
+\]
+
+\textbf{Show scaling invariance.} Take a constant $k>0$ and define the transformed parameters
+\[
+\theta_i' = k\,\theta_i, \qquad \beta_j' = k\,\beta_j, \qquad \alpha_j' = \frac{\alpha_j}{k}.
+\]
+First compute the transformed difference:
+\[
+\theta_i' - \beta_j' = k\theta_i - k\beta_j = k(\theta_i - \beta_j).
+\]
+Now plug into the probit argument with the transformed discrimination:
+\[
+\alpha_j'(\theta_i' - \beta_j') = \frac{\alpha_j}{k}\,\big[k(\theta_i - \beta_j)\big] = \alpha_j(\theta_i - \beta_j).
+\]
+Therefore, for every $(i,j)$,
+\[
+\Pr(y_{ij}=1 \mid \theta_i',\alpha_j',\beta_j') = \Phi\!\big(\alpha_j'(\theta_i' - \beta_j')\big) = \Phi\!\big(\alpha_j(\theta_i - \beta_j)\big) = \Pr(y_{ij}=1 \mid \theta_i,\alpha_j,\beta_j),
+\]
+and similarly
+\[
+\Pr(y_{ij}=0 \mid \theta_i',\alpha_j',\beta_j') = \Pr(y_{ij}=0 \mid \theta_i,\alpha_j,\beta_j).
+\]
+Thus for each observation,
+\[
+\Pr(y_{ij}\mid \theta_i',\alpha_j',\beta_j') = \Pr(y_{ij}\mid \theta_i,\alpha_j,\beta_j),
+\]
+and the product over all $(i,j)$ (the joint likelihood) is unchanged by the transformation
+\[
+\theta_i \mapsto k\theta_i, \qquad \beta_j \mapsto k\beta_j, \qquad \alpha_j \mapsto \alpha_j/k.
+\]
+
+This shows that the scale (units) of the ideological axis is not identified by the data: if we stretch or compress all $\theta_i$ and $\beta_j$ by a positive factor $k$ and compensate by shrinking $\alpha_j$ by $1/k$, the likelihood is exactly the same. The model only identifies ideological positions up to a multiplicative constant; choosing the ``unit'' of ideology (e.g. fixing $\sigma_\theta^2 = 1$ or constraining the variance of $\theta_i$) is a matter of convention needed to fix the scale.
 
 \item \textbf{Interpretation:} Do these symmetries affect how you interpret the parameters? Are there any other symmetries in the parameters?
 \end{enumerate}
