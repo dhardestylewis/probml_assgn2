@@ -351,6 +351,14 @@ and the product over all $(i,j)$ (the joint likelihood) is unchanged by the tran
 This shows that the scale (units) of the ideological axis is not identified by the data: if we stretch or compress all $\theta_i$ and $\beta_j$ by a positive factor $k$ and compensate by shrinking $\alpha_j$ by $1/k$, the likelihood is exactly the same. The model only identifies ideological positions up to a multiplicative constant; choosing the ``unit'' of ideology (e.g. fixing $\sigma_\theta^2 = 1$ or constraining the variance of $\theta_i$) is a matter of convention needed to fix the scale.
 
 \item \textbf{Interpretation:} Do these symmetries affect how you interpret the parameters? Are there any other symmetries in the parameters?
+
+The translation and scaling symmetries mean that the absolute origin and units of the ideological axis are not identified by the data. One can shift all $\theta_i$ and $\beta_j$ by a constant, or multiply them all by a positive constant and rescale $\alpha_j$ accordingly, without changing any vote probabilities. As a result, $\theta_i$ and $\beta_j$ are only interpretable up to an affine transformation (shift and rescale); what is identified are relative positions, orderings, and distances, not the raw numerical values themselves.
+
+If the sign of $\alpha_j$ is not constrained, there is one more symmetry: a global sign flip
+\[
+\theta_i \mapsto -\theta_i, \qquad \beta_j \mapsto -\beta_j, \qquad \alpha_j \mapsto -\alpha_j
+\]
+also leaves the likelihood unchanged. This means the orientation of the ideological axis (``which side is left/right'') is arbitrary until one imposes a convention (for example, fixing some known liberal to have $\theta_i>0$ or requiring most $\alpha_j>0$).
 \end{enumerate}
 
 \newpage
