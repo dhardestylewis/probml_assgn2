@@ -1693,6 +1693,224 @@ $\{m_{\beta_j}, V_{\beta_j}\}$ for $j = 1, \ldots, m$
 
 \item \textbf{Flagging uncertain recommendations} Using $q$ derive the approximate posterior predictive variance $\text{Var}(x_{ij} \mid \text{data})$ on a holdout set (i.e., $(i, j) \notin \Omega$) and explain how you would use this variance to flag uncertain recommendations.
 
+We consider a single held-out user-item pair $(i,j) \notin \Omega$.
+
+The generative model for the rating is
+\[
+x_{ij} \mid \theta_i, \beta_j \sim \mathcal{N}(\theta_i^\top \beta_j, \sigma^2).
+\]
+
+Under the variational posterior,
+\[
+q(\theta_i) = \mathcal{N}(m_{\theta_i}, V_{\theta_i}), \qquad q(\beta_j) = \mathcal{N}(m_{\beta_j}, V_{\beta_j}),
+\]
+and, by the mean-field assumption,
+\[
+q(\theta_i, \beta_j) = q(\theta_i)\,q(\beta_j),
+\]
+so $\theta_i$ and $\beta_j$ are independent under $q$.
+
+The posterior predictive for $x_{ij}$ is approximated by integrating out $\theta_i, \beta_j$ under $q$:
+\[
+p(x_{ij} \mid \text{data}) \approx \iint p(x_{ij} \mid \theta_i, \beta_j)\,q(\theta_i)\,q(\beta_j)\,d\theta_i\,d\beta_j.
+\]
+
+We now derive $\operatorname{Var}(x_{ij} \mid \text{data})$ under this approximation.
+
+\textbf{Step 1: Law of total variance.}
+
+Define the latent mean function
+\[
+\mu_{ij}(\theta_i, \beta_j) := \theta_i^\top \beta_j.
+\]
+
+The law of total variance gives
+\[
+\operatorname{Var}(x_{ij} \mid \text{data}) \approx \mathbb{E}_q\!\big[\operatorname{Var}(x_{ij} \mid \theta_i, \beta_j)\big] + \operatorname{Var}_q\!\big(\mathbb{E}[x_{ij} \mid \theta_i, \beta_j]\big),
+\]
+where the expectation and variance are with respect to $q(\theta_i, \beta_j)$.
+
+From the Gaussian likelihood,
+\[
+\operatorname{Var}(x_{ij} \mid \theta_i, \beta_j) = \sigma^2, \qquad \mathbb{E}[x_{ij} \mid \theta_i, \beta_j] = \mu_{ij}(\theta_i, \beta_j) = \theta_i^\top \beta_j.
+\]
+
+Therefore,
+\[
+\mathbb{E}_q\!\big[\operatorname{Var}(x_{ij} \mid \theta_i, \beta_j)\big] = \mathbb{E}_q[\sigma^2] = \sigma^2,
+\]
+and
+\[
+\operatorname{Var}_q\!\big(\mathbb{E}[x_{ij} \mid \theta_i, \beta_j]\big) = \operatorname{Var}_q(\theta_i^\top \beta_j).
+\]
+
+So
+\[
+\operatorname{Var}(x_{ij} \mid \text{data}) \approx \sigma^2 + \operatorname{Var}_q(\theta_i^\top \beta_j).
+\]
+
+The problem is now reduced to computing $\operatorname{Var}_q(\theta_i^\top \beta_j)$.
+
+\textbf{Step 2: Moments of $\theta_i^\top \beta_j$ under $q$.}
+
+Under $q$,
+\[
+\theta_i \sim \mathcal{N}(m_{\theta_i}, V_{\theta_i}), \qquad \beta_j \sim \mathcal{N}(m_{\beta_j}, V_{\beta_j}),
+\]
+with $\theta_i \perp \beta_j$ (independent).
+
+We will compute:
+\begin{itemize}
+\item $\mathbb{E}_q[\theta_i^\top \beta_j]$,
+\item $\mathbb{E}_q[(\theta_i^\top \beta_j)^2]$,
+\item $\operatorname{Var}_q(\theta_i^\top \beta_j) = \mathbb{E}_q[(\theta_i^\top \beta_j)^2] - \big(\mathbb{E}_q[\theta_i^\top \beta_j]\big)^2$.
+\end{itemize}
+
+\textit{Step 2.1: First moment $\mathbb{E}_q[\theta_i^\top \beta_j]$.}
+
+Using linearity of expectation and independence:
+\[
+\mathbb{E}_q[\theta_i^\top \beta_j] = \mathbb{E}_q[\theta_i]^\top \mathbb{E}_q[\beta_j] = m_{\theta_i}^\top m_{\beta_j}.
+\]
+
+\textit{Step 2.2: Second moment $\mathbb{E}_q[(\theta_i^\top \beta_j)^2]$.}
+
+Start from the scalar square:
+\[
+(\theta_i^\top \beta_j)^2 = (\beta_j^\top \theta_i)(\theta_i^\top \beta_j) = \beta_j^\top(\theta_i \theta_i^\top)\beta_j.
+\]
+
+Use the identity for quadratic forms in terms of trace:
+\[
+x^\top A x = \operatorname{tr}(A x x^\top).
+\]
+
+Here, take $x = \beta_j$, $A = \theta_i \theta_i^\top$. Then
+\[
+\beta_j^\top(\theta_i \theta_i^\top)\beta_j = \operatorname{tr}(\theta_i \theta_i^\top \,\beta_j \beta_j^\top).
+\]
+
+Thus
+\[
+(\theta_i^\top \beta_j)^2 = \operatorname{tr}(\theta_i \theta_i^\top \,\beta_j \beta_j^\top).
+\]
+
+Now take expectation with respect to $q$:
+\[
+\mathbb{E}_q[(\theta_i^\top \beta_j)^2] = \mathbb{E}_q\big[\operatorname{tr}(\theta_i \theta_i^\top \,\beta_j \beta_j^\top)\big].
+\]
+
+Use linearity of trace and expectation:
+\[
+\mathbb{E}_q\big[\operatorname{tr}(\theta_i \theta_i^\top \,\beta_j \beta_j^\top)\big] = \operatorname{tr}\big(\mathbb{E}_q[\theta_i \theta_i^\top \,\beta_j \beta_j^\top]\big).
+\]
+
+Under the mean-field factorization, $\theta_i$ and $\beta_j$ are independent, so
+\[
+\mathbb{E}_q[\theta_i \theta_i^\top \,\beta_j \beta_j^\top] = \mathbb{E}_q[\theta_i \theta_i^\top]\;\mathbb{E}_q[\beta_j \beta_j^\top].
+\]
+
+Define the second-moment matrices
+\[
+S_{\theta_i} := \mathbb{E}_q[\theta_i \theta_i^\top], \qquad S_{\beta_j} := \mathbb{E}_q[\beta_j \beta_j^\top].
+\]
+
+Then
+\[
+\mathbb{E}_q[(\theta_i^\top \beta_j)^2] = \operatorname{tr}\big(S_{\theta_i} S_{\beta_j}\big).
+\]
+
+For Gaussian factors,
+\[
+S_{\theta_i} = V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top, \qquad S_{\beta_j} = V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top.
+\]
+
+\textit{Step 2.3: Variance $\operatorname{Var}_q(\theta_i^\top \beta_j)$.}
+
+By definition,
+\[
+\operatorname{Var}_q(\theta_i^\top \beta_j) = \mathbb{E}_q[(\theta_i^\top \beta_j)^2] - \big(\mathbb{E}_q[\theta_i^\top \beta_j]\big)^2.
+\]
+
+We already have:
+\begin{itemize}
+\item $\mathbb{E}_q[(\theta_i^\top \beta_j)^2] = \operatorname{tr}(S_{\theta_i} S_{\beta_j})$,
+\item $\mathbb{E}_q[\theta_i^\top \beta_j] = m_{\theta_i}^\top m_{\beta_j}$.
+\end{itemize}
+
+Thus
+\[
+\operatorname{Var}_q(\theta_i^\top \beta_j) = \operatorname{tr}(S_{\theta_i} S_{\beta_j}) - (m_{\theta_i}^\top m_{\beta_j})^2.
+\]
+
+Using $S_{\theta_i} = V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top$ and $S_{\beta_j} = V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top$, expanding and simplifying yields the equivalent expression
+\[
+\operatorname{Var}_q(\theta_i^\top \beta_j) = \operatorname{tr}(V_{\theta_i} V_{\beta_j}) + m_{\beta_j}^\top V_{\theta_i} m_{\beta_j} + m_{\theta_i}^\top V_{\beta_j} m_{\theta_i}.
+\]
+
+\textbf{Step 3: Posterior predictive variance.}
+
+Putting everything together:
+\[
+\operatorname{Var}(x_{ij} \mid \text{data}) \approx \sigma^2 + \operatorname{Var}_q(\theta_i^\top \beta_j).
+\]
+
+So the two equivalent formulas are:
+
+\textit{Compact form (via second-moment matrices):}
+\[
+\boxed{
+\operatorname{Var}(x_{ij} \mid \text{data}) \approx \sigma^2 + \operatorname{tr}\big(S_{\theta_i} S_{\beta_j}\big) - (m_{\theta_i}^\top m_{\beta_j})^2
+}
+\]
+with
+\[
+S_{\theta_i} = V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top, \qquad S_{\beta_j} = V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top.
+\]
+
+\textit{Expanded form (in terms of $V$ and $m$ only):}
+\[
+\boxed{
+\operatorname{Var}(x_{ij} \mid \text{data}) \approx \sigma^2 + \operatorname{tr}(V_{\theta_i} V_{\beta_j}) + m_{\beta_j}^\top V_{\theta_i} m_{\beta_j} + m_{\theta_i}^\top V_{\beta_j} m_{\theta_i}
+}
+\]
+
+Here $m_{\theta_i}, V_{\theta_i}, m_{\beta_j}, V_{\beta_j}$ are the current variational means and covariances from the MFVI algorithm.
+
+\textbf{Using this variance to flag uncertain recommendations.}
+
+For a held-out pair $(i,j) \notin \Omega$:
+\begin{itemize}
+\item \textit{Predictive mean:}
+\[
+\hat{x}_{ij} := \mathbb{E}_q[x_{ij} \mid \text{data}] \approx m_{\theta_i}^\top m_{\beta_j}.
+\]
+\item \textit{Predictive variance:}
+\[
+\widehat{\operatorname{Var}}(x_{ij} \mid \text{data}) \approx \sigma^2 + \operatorname{Var}_q(\theta_i^\top \beta_j),
+\]
+using either of the formulas above.
+\end{itemize}
+
+To flag uncertain recommendations, one can:
+\begin{enumerate}
+\item Compute $\widehat{\operatorname{Var}}(x_{ij} \mid \text{data})$ for all candidate $(i,j)$ in the recommendation pool.
+\item Choose a threshold $\tau$ (e.g., the 80th or 90th percentile of the variance values).
+\item Mark all pairs with
+\[
+\widehat{\operatorname{Var}}(x_{ij} \mid \text{data}) > \tau
+\]
+as high-uncertainty.
+\item Use this flag to:
+\begin{itemize}
+\item avoid recommending high-uncertainty items,
+\item or surface them only as ``exploration'' queries,
+\item or ask the user for more feedback on those items.
+\end{itemize}
+\end{enumerate}
+
+Pairs with lower variance are treated as more reliable, high-confidence recommendations.
+
 \item \textbf{Setting hyperparameters} Explain how you could set $\eta^2_\theta$, $\eta^2_B$, and $\sigma^2$ using heldout data.
 \end{enumerate}
 
