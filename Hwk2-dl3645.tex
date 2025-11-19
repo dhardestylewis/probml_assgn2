@@ -2136,7 +2136,235 @@ m_{\theta_i} = V_{\theta_i} \sigma^{-2} \sum_{j \in \Omega_i} m_{\beta_j} (x_{ij
 \]
 Explain why this residualization is the only change.
 
+Start from the feature-augmented likelihood for a single observed pair $(i,j) \in \Omega$:
+\[
+x_{ij} \mid \theta_i, \beta_j, \gamma \sim \mathcal{N}\big(\theta_i^\top \beta_j + g_j^\top \gamma,\ \sigma^2\big).
+\]
+
+Define the residualized response
+\[
+r_{ij} := x_{ij} - g_j^\top \gamma.
+\]
+
+Then
+\[
+r_{ij} \mid \theta_i, \beta_j, \gamma \sim \mathcal{N}\big(\theta_i^\top \beta_j,\ \sigma^2\big),
+\]
+which has the same form as the original model without features, but with $x_{ij}$ replaced by $r_{ij}$.
+
+\textbf{1. Conditional for $\theta_i$: precision unchanged, mean residualized.}
+
+Collect all terms in the joint log-density that depend on $\theta_i$:
+\[
+\log p(\theta_i \mid \{\beta_j\}, \gamma, X, G) = \log p(\theta_i) + \sum_{j \in \Omega_i} \log p(x_{ij} \mid \theta_i, \beta_j, \gamma) + \text{const},
+\]
+where $\Omega_i = \{j : (i,j) \in \Omega\}$.
+
+Using the Gaussian prior $\theta_i \sim \mathcal{N}(0, \eta_\theta^2 I_K)$ and the residual form,
+\[
+\log p(\theta_i) = -\tfrac{1}{2}\eta_\theta^{-2}\,\theta_i^\top \theta_i + \text{const},
+\]
+\[
+\log p(x_{ij} \mid \theta_i, \beta_j, \gamma) = -\tfrac{1}{2\sigma^2}\big(r_{ij} - \theta_i^\top \beta_j\big)^2 + \text{const}.
+\]
+
+Expand the likelihood term in $\theta_i$:
+\[
+-\tfrac{1}{2\sigma^2}\big(r_{ij} - \theta_i^\top \beta_j\big)^2 = -\tfrac{1}{2\sigma^2}\big((\theta_i^\top \beta_j)^2 - 2 r_{ij}\,\theta_i^\top \beta_j + r_{ij}^2\big).
+\]
+
+The contribution of all $j \in \Omega_i$ to the log-density in $\theta_i$ is:
+\begin{itemize}
+\item \textit{Quadratic term:}
+\[
+-\tfrac{1}{2}\theta_i^\top\left(\eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} \beta_j \beta_j^\top\right)\theta_i.
+\]
+\item \textit{Linear term:}
+\[
+\theta_i^\top\left(\sigma^{-2} \sum_{j \in \Omega_i} \beta_j r_{ij}\right) = \theta_i^\top\left(\sigma^{-2} \sum_{j \in \Omega_i} \beta_j (x_{ij} - g_j^\top \gamma)\right).
+\]
+\end{itemize}
+
+Thus the conditional remains Gaussian,
+\[
+p(\theta_i \mid \{\beta_j\}, \gamma, X, G) = \mathcal{N}\big(\mu_{\theta_i}^{\text{cond}}, \Sigma_{\theta_i}^{\text{cond}}\big),
+\]
+with
+\begin{itemize}
+\item \textit{Precision:}
+\[
+(\Sigma_{\theta_i}^{\text{cond}})^{-1} = \eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} \beta_j \beta_j^\top,
+\]
+exactly the same as in the model without features.
+\item \textit{Mean:}
+\[
+\mu_{\theta_i}^{\text{cond}} = \Sigma_{\theta_i}^{\text{cond}}\,\sigma^{-2} \sum_{j \in \Omega_i} \beta_j (x_{ij} - g_j^\top \gamma).
+\]
+\end{itemize}
+
+In mean-field VI, $\gamma$ and $\beta_j$ are replaced by their expectations:
+\[
+\mathbb{E}_q[\gamma] = m_\gamma, \quad \mathbb{E}_q[\beta_j] = m_{\beta_j}.
+\]
+
+Hence the CAVI update for $q(\theta_i) = \mathcal{N}(m_{\theta_i}, V_{\theta_i})$ is:
+\begin{itemize}
+\item \textit{Precision:}
+\[
+V_{\theta_i}^{-1} = \eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} \mathbb{E}_q[\beta_j \beta_j^\top] \quad \text{(same structure as before, no $g_j$ term)},
+\]
+\item \textit{Mean:}
+\[
+m_{\theta_i} = V_{\theta_i}\,\sigma^{-2} \sum_{j \in \Omega_i} m_{\beta_j}\,(x_{ij} - g_j^\top m_\gamma),
+\]
+\end{itemize}
+which is exactly the original mean update with the residualized response $x_{ij} - g_j^\top m_\gamma$ in place of $x_{ij}$.
+
+\textbf{2. Conditional for $\beta_j$: precision unchanged, mean residualized.}
+
+The same argument applies for $\beta_j$. Collect the terms involving $\beta_j$:
+\[
+\log p(\beta_j \mid \{\theta_i\}, \gamma, X, G) = \log p(\beta_j) + \sum_{i \in \Omega^j} \log p(x_{ij} \mid \theta_i, \beta_j, \gamma) + \text{const},
+\]
+where $\Omega^j = \{i : (i,j) \in \Omega\}$.
+
+Using the residuals $r_{ij} = x_{ij} - g_j^\top \gamma$ and the prior $\beta_j \sim \mathcal{N}(0, \eta_B^2 I_K)$, the same expansion yields:
+\begin{itemize}
+\item \textit{Precision:}
+\[
+(\Sigma_{\beta_j}^{\text{cond}})^{-1} = \eta_B^{-2} I_K + \sigma^{-2} \sum_{i \in \Omega^j} \theta_i \theta_i^\top,
+\]
+again unchanged from the no-feature model.
+\item \textit{Mean:}
+\[
+\mu_{\beta_j}^{\text{cond}} = \Sigma_{\beta_j}^{\text{cond}}\,\sigma^{-2} \sum_{i \in \Omega^j} \theta_i (x_{ij} - g_j^\top \gamma).
+\]
+\end{itemize}
+
+Taking expectations under $q$ gives the CAVI update for $q(\beta_j) = \mathcal{N}(m_{\beta_j}, V_{\beta_j})$:
+\begin{itemize}
+\item \textit{Precision:}
+\[
+V_{\beta_j}^{-1} = \eta_B^{-2} I_K + \sigma^{-2} \sum_{i \in \Omega^j} \mathbb{E}_q[\theta_i \theta_i^\top],
+\]
+\item \textit{Mean:}
+\[
+m_{\beta_j} = V_{\beta_j}\,\sigma^{-2} \sum_{i \in \Omega^j} m_{\theta_i}\,(x_{ij} - g_j^\top m_\gamma).
+\]
+\end{itemize}
+
+This matches the stated residualized form.
+
+\textbf{3. Why residualization is the only change.}
+
+The key point is how the additive feature term enters the likelihood.
+
+The log-likelihood contribution for a single $(i,j)$ is
+\[
+-\frac{1}{2\sigma^2}\big(x_{ij} - \theta_i^\top \beta_j - g_j^\top \gamma\big)^2.
+\]
+
+Expanding in $\theta_i$ or $\beta_j$:
+\begin{itemize}
+\item The quadratic term in $\theta_i$ or $\beta_j$ comes from $(\theta_i^\top \beta_j)^2$ and leads to the precision matrices. This term does not involve $g_j^\top \gamma$, so the Hessian with respect to $\theta_i$ or $\beta_j$ is unchanged. Consequently, the precisions $V_{\theta_i}^{-1}$ and $V_{\beta_j}^{-1}$ are identical to the no-feature case.
+
+\item The linear term in $\theta_i$ (or $\beta_j$) involves the product $\beta_j (x_{ij} - g_j^\top \gamma)$ (or $\theta_i (x_{ij} - g_j^\top \gamma)$). Here, the feature term appears only by shifting the effective response from $x_{ij}$ to the residual $x_{ij} - g_j^\top \gamma$.
+
+\item Under mean-field VI, $\gamma$ is replaced by its mean $m_\gamma$, so every occurrence of $x_{ij}$ in the mean updates is replaced by $x_{ij} - g_j^\top m_\gamma$.
+\end{itemize}
+
+Therefore:
+\begin{itemize}
+\item The curvature of the conditional log-densities in $\theta_i$ and $\beta_j$ is unchanged.
+\item Only the linear term (and thus the conditional mean) is modified, through a simple residualization of the observed rating by the feature contribution.
+\end{itemize}
+
+This is why the only change in the CAVI updates is
+\[
+x_{ij} \quad \longrightarrow \quad x_{ij} - g_j^\top m_\gamma
+\]
+inside the mean formulas, while the precision matrices remain the same.
+
 \item \textbf{User features} Suppose we are also given user features $f_i \in \mathbb{R}^p$. Suggest a way of extending the model to account for this feature. Which CAVI updates would you expect to change and why?
+
+A natural extension that incorporates user features $f_i \in \mathbb{R}^p$ is to add a user-side linear term to the mean of the Gaussian observation model. Introduce a coefficient vector $\delta \in \mathbb{R}^p$ and define
+\[
+x_{ij} \mid \theta_i, \beta_j, \gamma, \delta \sim \mathcal{N}(\theta_i^\top \beta_j + g_j^\top \gamma + f_i^\top \delta,\ \sigma^2), \quad \delta \sim \mathcal{N}(0, \eta_\delta^2 I_p).
+\]
+
+The variational family is then extended with a Gaussian factor
+\[
+q(\delta) = \mathcal{N}(m_\delta, V_\delta).
+\]
+
+It is convenient to rewrite the likelihood in terms of residuals. For a single pair $(i,j)$,
+\[
+x_{ij} - g_j^\top \gamma - f_i^\top \delta \mid \theta_i, \beta_j, \gamma, \delta \sim \mathcal{N}(\theta_i^\top \beta_j,\ \sigma^2),
+\]
+so the likelihood has the same form as the original matrix factorization model, but with
+\[
+x_{ij} \text{ replaced by } r_{ij} := x_{ij} - g_j^\top \gamma - f_i^\top \delta.
+\]
+
+Under the mean-field approximation, $\gamma$ and $\delta$ are replaced by their variational means $m_\gamma$ and $m_\delta$, giving the effective residual
+\[
+r_{ij} \approx x_{ij} - g_j^\top m_\gamma - f_i^\top m_\delta.
+\]
+
+\textbf{Effect on the CAVI updates.}
+
+The structure of the CAVI updates for $\theta_i$, $\beta_j$, and $\gamma$ can be described in terms of this residualization.
+
+\textit{Updates for $q(\theta_i)$ and $q(\beta_j)$.}
+
+The Gaussian complete conditionals for $\theta_i$ and $\beta_j$ have precisions (inverse variances) determined by the quadratic terms in $\theta_i$ and $\beta_j$:
+\[
+V_{\theta_i}^{-1} = \eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} \beta_j \beta_j^\top, \quad V_{\beta_j}^{-1} = \eta_B^{-2} I_K + \sigma^{-2} \sum_{i \in \Omega^j} \theta_i \theta_i^\top.
+\]
+
+These terms do not involve $x_{ij}$, $g_j$, or $f_i$, so under variational expectations the precisions remain unchanged:
+\[
+V_{\theta_i}^{-1} = \eta_\theta^{-2} I_K + \sigma^{-2} \sum_{j \in \Omega_i} \mathbb{E}_q[\beta_j \beta_j^\top], \quad V_{\beta_j}^{-1} = \eta_B^{-2} I_K + \sigma^{-2} \sum_{i \in \Omega^j} \mathbb{E}_q[\theta_i \theta_i^\top].
+\]
+
+The linear terms in the complete conditionals, however, are modified by the residuals. Under the extended model, the CAVI means become
+\[
+m_{\theta_i} = V_{\theta_i}\,\sigma^{-2} \sum_{j \in \Omega_i} m_{\beta_j}\,(x_{ij} - g_j^\top m_\gamma - f_i^\top m_\delta),
+\]
+\[
+m_{\beta_j} = V_{\beta_j}\,\sigma^{-2} \sum_{i \in \Omega^j} m_{\theta_i}\,(x_{ij} - g_j^\top m_\gamma - f_i^\top m_\delta),
+\]
+so the only change relative to the no-user-feature case is an additional residualization by the user feature term $f_i^\top m_\delta$.
+
+\textit{Update for $q(\gamma)$.}
+
+The conditional distribution for $\gamma$ now involves residuals that subtract both the latent factor contribution and the user feature contribution:
+\[
+x_{ij} - \theta_i^\top \beta_j - f_i^\top \delta.
+\]
+
+Taking expectations under $q$, the term $(x_{ij} - \theta_i^\top \beta_j)$ in the given conditional is replaced by
+\[
+x_{ij} - \mathbb{E}_q[\theta_i]^\top \mathbb{E}_q[\beta_j] - f_i^\top m_\delta = x_{ij} - m_{\theta_i}^\top m_{\beta_j} - f_i^\top m_\delta.
+\]
+
+The precision $V_\gamma^{-1}$ retains the same form as in the item-feature-only model, since it depends only on $\sum_{(i,j) \in \Omega} g_j g_j^\top$, which is unchanged.
+
+\textit{New update for $q(\delta)$.}
+
+The additional parameter $\delta$ has a Gaussian complete conditional analogous to that of $\gamma$, but built from user features $f_i$ rather than item features $g_j$. Its precision involves
+\[
+V_\delta^{-1} = \eta_\delta^{-2} I_p + \sigma^{-2} \sum_{(i,j) \in \Omega} f_i f_i^\top,
+\]
+and its mean is proportional to a sum of residuals of the form
+\[
+x_{ij} - \theta_i^\top \beta_j - g_j^\top \gamma,
+\]
+which, under the variational approximation, become
+\[
+x_{ij} - m_{\theta_i}^\top m_{\beta_j} - g_j^\top m_\gamma.
+\]
+
 \end{enumerate}
 
 \newpage
