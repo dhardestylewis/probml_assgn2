@@ -1912,6 +1912,81 @@ as high-uncertainty.
 Pairs with lower variance are treated as more reliable, high-confidence recommendations.
 
 \item \textbf{Setting hyperparameters} Explain how you could set $\eta^2_\theta$, $\eta^2_B$, and $\sigma^2$ using heldout data.
+
+Let $\Omega \subset \{1,\dots,n\} \times \{1,\dots,m\}$ be the set of observed entries.
+
+Split $\Omega$ into a training and validation set:
+\[
+\Omega_{\text{train}} \cup \Omega_{\text{val}} = \Omega, \quad \Omega_{\text{train}} \cap \Omega_{\text{val}} = \varnothing.
+\]
+
+During fitting, only entries in $\Omega_{\text{train}}$ are used.
+
+\textbf{Step 1: Fit MFVI for a fixed hyperparameter triple.}
+
+Fix a candidate triple $(\eta_\theta^2, \eta_B^2, \sigma^2)$.
+
+Run CAVI on $\Omega_{\text{train}}$ until convergence, obtaining variational factors
+\[
+q(\theta_i) = \mathcal{N}(m_{\theta_i}, V_{\theta_i}), \qquad q(\beta_j) = \mathcal{N}(m_{\beta_j}, V_{\beta_j})
+\]
+for all $i,j$ that appear in $\Omega_{\text{train}}$.
+
+\textbf{Step 2: Posterior predictive on the validation set.}
+
+For each held-out pair $(i,j) \in \Omega_{\text{val}}$, approximate the posterior predictive distribution of $x_{ij}$.
+
+\textit{Predictive mean:}
+\[
+\hat{\mu}_{ij} := \mathbb{E}_q[x_{ij} \mid \text{data}] \approx m_{\theta_i}^\top m_{\beta_j}.
+\]
+
+Define
+\[
+S_{\theta_i} := V_{\theta_i} + m_{\theta_i} m_{\theta_i}^\top, \qquad S_{\beta_j} := V_{\beta_j} + m_{\beta_j} m_{\beta_j}^\top,
+\]
+so that
+\[
+\mathbb{E}_q[\theta_i^\top \beta_j] = m_{\theta_i}^\top m_{\beta_j},
+\]
+\[
+\mathbb{E}_q[(\theta_i^\top \beta_j)^2] = \operatorname{tr}(S_{\theta_i} S_{\beta_j}),
+\]
+and hence
+\[
+\operatorname{Var}_q(\theta_i^\top \beta_j) = \operatorname{tr}(S_{\theta_i} S_{\beta_j}) - (m_{\theta_i}^\top m_{\beta_j})^2.
+\]
+
+Using the law of total variance,
+\[
+\operatorname{Var}(x_{ij} \mid \text{data}) \approx \sigma^2 + \operatorname{Var}_q(\theta_i^\top \beta_j) =: \hat{v}_{ij}.
+\]
+
+Thus the approximate posterior predictive for each held-out entry is
+\[
+p(x_{ij} \mid \text{data}) \approx \mathcal{N}\big(x_{ij};\ \hat{\mu}_{ij},\ \hat{v}_{ij}\big).
+\]
+
+\textbf{Step 3: Validation objective.}
+
+Define the held-out predictive log-likelihood for this triple $(\eta_\theta^2, \eta_B^2, \sigma^2)$ as
+\[
+\mathcal{L}_{\text{val}}(\eta_\theta^2, \eta_B^2, \sigma^2) = \sum_{(i,j) \in \Omega_{\text{val}}} \log \mathcal{N}\big(x_{ij};\ \hat{\mu}_{ij},\ \hat{v}_{ij}\big).
+\]
+
+\textbf{Step 4: Hyperparameter selection and refitting.}
+
+Search over a grid (or finite set) of candidate values for $(\eta_\theta^2, \eta_B^2, \sigma^2)$.
+
+For each candidate, compute $\mathcal{L}_{\text{val}}$ as above.
+
+Select
+\[
+(\eta_\theta^2, \eta_B^2, \sigma^2)^\star = \arg\max_{(\eta_\theta^2, \eta_B^2, \sigma^2)} \mathcal{L}_{\text{val}}(\eta_\theta^2, \eta_B^2, \sigma^2).
+\]
+
+Finally, with $(\eta_\theta^2, \eta_B^2, \sigma^2)^\star$ fixed, refit the variational MF model on all observed entries $\Omega$.
+
 \end{enumerate}
 
 \subsection*{Question 2.3: Adding item features (e.g., Genre) and updating CAVI}
