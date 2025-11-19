@@ -2008,6 +2008,128 @@ p(\gamma \mid \Theta, B, X, G) &= \mathcal{N}(\mu_\gamma, \Sigma_\gamma)\\
 \begin{enumerate}[label=\alph*)]
 \item \textbf{Mean-field extension.} Extend the variational family to include $q(\gamma) = \mathcal{N}(m_\gamma, V_\gamma)$. Derive the CAVI update for $q(\gamma)$ by replacing $\theta_i^\top \beta_j$ with $\mathbb{E}_q[\theta_i]^\top \mathbb{E}_q[\beta_j]$.
 
+Start from the given complete conditional for $\gamma$:
+\[
+p(\gamma \mid \Theta, B, X, G) = \mathcal{N}(\mu_\gamma, \Sigma_\gamma),
+\]
+with
+\[
+\Sigma_\gamma^{-1} = \eta_\gamma^{-2} I_p + \sigma^{-2} \sum_{(i,j) \in \Omega} g_j g_j^\top,
+\]
+\[
+\mu_\gamma = \Sigma_\gamma \sigma^{-2} \sum_{(i,j) \in \Omega} g_j (x_{ij} - \theta_i^\top \beta_j).
+\]
+
+Write its log-density in quadratic form. For some constant $C(\Theta, B)$ that does not depend on $\gamma$,
+\[
+\log p(\gamma \mid \Theta, B, X, G) = -\frac{1}{2}\gamma^\top \Sigma_\gamma^{-1} \gamma + \gamma^\top \Sigma_\gamma^{-1} \mu_\gamma + C(\Theta, B).
+\]
+
+Substitute the expressions for $\Sigma_\gamma^{-1}$ and $\mu_\gamma$:
+\[
+\Sigma_\gamma^{-1} = A \quad \text{where} \quad A := \eta_\gamma^{-2} I_p + \sigma^{-2} \sum_{(i,j) \in \Omega} g_j g_j^\top,
+\]
+\[
+\Sigma_\gamma^{-1} \mu_\gamma = A \mu_\gamma = \sigma^{-2} \sum_{(i,j) \in \Omega} g_j (x_{ij} - \theta_i^\top \beta_j).
+\]
+
+So the conditional can be written as
+\[
+\log p(\gamma \mid \Theta, B, X, G) = -\frac{1}{2}\gamma^\top A \gamma + \gamma^\top b(\Theta, B) + C(\Theta, B),
+\]
+where
+\[
+b(\Theta, B) := \sigma^{-2} \sum_{(i,j) \in \Omega} g_j (x_{ij} - \theta_i^\top \beta_j).
+\]
+
+Note that:
+\begin{itemize}
+\item $A$ depends only on $G, \sigma^2, \eta_\gamma^2$, not on $\Theta, B$.
+\item All dependence on $\Theta, B$ is in the linear term $b(\Theta, B)$ and the constant $C(\Theta, B)$.
+\end{itemize}
+
+\textbf{Apply the CAVI identity.}
+
+The mean-field family is extended as
+\[
+q(\Theta, B, \gamma) = \left(\prod_i q(\theta_i)\right) \left(\prod_j q(\beta_j)\right) q(\gamma),
+\]
+with
+\[
+q(\theta_i) = \mathcal{N}(m_{\theta_i}, V_{\theta_i}), \quad q(\beta_j) = \mathcal{N}(m_{\beta_j}, V_{\beta_j}), \quad q(\gamma) = \mathcal{N}(m_\gamma, V_\gamma).
+\]
+
+The CAVI identity for the optimal factor is
+\[
+\log q^\star(\gamma) \propto \mathbb{E}_{q(\Theta, B)}[\log p(\gamma \mid \Theta, B, X, G)].
+\]
+
+Insert the quadratic form:
+\[
+\log q^\star(\gamma) \propto \mathbb{E}_{q(\Theta, B)}\left[-\frac{1}{2}\gamma^\top A \gamma + \gamma^\top b(\Theta, B) + C(\Theta, B)\right].
+\]
+
+The expectation over $\Theta, B$ does not touch $\gamma$, so:
+\begin{itemize}
+\item The quadratic term is unchanged, because $A$ is constant:
+\[
+\mathbb{E}_{q(\Theta, B)}\left[-\frac{1}{2}\gamma^\top A \gamma\right] = -\frac{1}{2}\gamma^\top A \gamma.
+\]
+\item The linear term becomes $\gamma^\top \mathbb{E}_q[b(\Theta, B)]$.
+\item The constant term becomes another constant (irrelevant for normalization of $q(\gamma)$).
+\end{itemize}
+
+Thus
+\[
+\log q^\star(\gamma) \propto -\frac{1}{2}\gamma^\top A \gamma + \gamma^\top \,\mathbb{E}_q[b(\Theta, B)] + \text{const}.
+\]
+
+This is again the log-density of a multivariate Normal in $\gamma$ with precision matrix $A$ and mean $A^{-1} \mathbb{E}_q[b(\Theta, B)]$.
+
+\textbf{Computing $\mathbb{E}_q[b(\Theta, B)]$.}
+
+Recall
+\[
+b(\Theta, B) = \sigma^{-2} \sum_{(i,j) \in \Omega} g_j (x_{ij} - \theta_i^\top \beta_j).
+\]
+
+Take the expectation under the mean-field $q(\Theta, B)$:
+\[
+\mathbb{E}_q[b(\Theta, B)] = \sigma^{-2} \sum_{(i,j) \in \Omega} g_j (x_{ij} - \mathbb{E}_q[\theta_i^\top \beta_j]).
+\]
+
+Under mean-field,
+\[
+q(\Theta, B) = \left(\prod_i q(\theta_i)\right) \left(\prod_j q(\beta_j)\right) \Rightarrow \theta_i \perp \beta_j \text{ under } q,
+\]
+so
+\[
+\mathbb{E}_q[\theta_i^\top \beta_j] = \mathbb{E}_q[\theta_i]^\top \mathbb{E}_q[\beta_j] = m_{\theta_i}^\top m_{\beta_j}.
+\]
+
+Therefore
+\[
+\mathbb{E}_q[b(\Theta, B)] = \sigma^{-2} \sum_{(i,j) \in \Omega} g_j (x_{ij} - m_{\theta_i}^\top m_{\beta_j}).
+\]
+
+\textbf{Final CAVI update for $q(\gamma)$.}
+
+From the quadratic form,
+\[
+q^\star(\gamma) = \mathcal{N}(m_\gamma, V_\gamma),
+\]
+with
+
+\textit{Precision:}
+\[
+V_\gamma^{-1} = A = \eta_\gamma^{-2} I_p + \sigma^{-2} \sum_{(i,j) \in \Omega} g_j g_j^\top,
+\]
+
+\textit{Mean:}
+\[
+m_\gamma = V_\gamma\,\mathbb{E}_q[b(\Theta, B)] = V_\gamma\,\sigma^{-2} \sum_{(i,j) \in \Omega} g_j (x_{ij} - m_{\theta_i}^\top m_{\beta_j}).
+\]
+
 \item \textbf{How do $\theta, \beta$ updates change?} Show that the precisions $V^{-1}_{\theta_i}$ and $V^{-1}_{\beta_j}$ are unchanged, and only the means are residualized by the feature term:
 \[
 m_{\theta_i} = V_{\theta_i} \sigma^{-2} \sum_{j \in \Omega_i} m_{\beta_j} (x_{ij} - g_j^\top m_\gamma), \quad m_{\beta_j} = V_{\beta_j} \sigma^{-2} \sum_{i \in \Omega^j} m_{\theta_i} (x_{ij} - g_j^\top m_\gamma).
