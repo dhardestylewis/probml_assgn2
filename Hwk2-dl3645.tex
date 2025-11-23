@@ -2369,6 +2369,83 @@ x_{ij} - m_{\theta_i}^\top m_{\beta_j} - g_j^\top m_\gamma.
 
 \newpage
 
+\section*{Question 3: Implementation \& Report (choose \emph{one})}
+
+Pick exactly one of the following and implement it end-to-end:\footnote{For MAP and coordinatewise MAP implementations, feel free to use automatic differentiation frameworks like torch, pyro, jax, or tensorflow.}
+
+\begin{itemize}
+\item \textbf{Option A (Ideal Point Model; Probit IRT, 1D):} Implement a CAVI (using \S1.2) on the 113th Senate dataset (votes.csv, senators.txt).
+
+\item \textbf{Option B (Gaussian Matrix Factorization):} Implement CAVI updates for the model in \S2 on a standard explicit-feedback dataset (e.g. MovieLens 100K). Use the coordinate-wise updates you derived and evaluate out-of-sample.
+
+\item \textbf{Option C (Project-aligned Probabilistic Latent Factor Model):} If your final project involves a \emph{probabilistic latent factor model}---interpreted broadly to include both linear matrix factorization and nonlinear variants such as variational autoencoders (VAEs) or other probabilistic latent-variable models---implement a minimal working version on a real dataset of your choice. Clearly describe the dataset and the generative process (likelihood, priors, and inference or optimization method). Be sure to \textbf{introduce the model and its probabilistic assumptions}, and \textbf{interpret the latent variables} (e.g., what structure or semantics they capture). Include both quantitative evaluation (e.g., held-out log-likelihood or predictive metrics) and qualitative visualizations that illuminate the learned latent structure.
+\end{itemize}
+
+\subsection*{What to implement (minimal checklist)}
+
+\textbf{Common to both options}
+
+\begin{enumerate}[label=\alph*)]
+\item \textbf{Posterior predictive.}
+\begin{itemize}
+\item \emph{Option A:} For held-out $(i, j)$, compute $\hat{p}_{ij} = \Phi(\hat{\alpha}_j(\hat{\theta}_i - \hat{\beta}_j))$.
+\item \emph{Option B:} For held-out $(i, j)$, compute $\hat{x}_{ij} = \hat{\theta}_i^\top \hat{\beta}_j$.
+\end{itemize}
+
+\item \textbf{Metrics (pick at least two).}
+\begin{itemize}
+\item \emph{Binary (Option A):} average log-posterior-predictive on the held-out set + one metric of your choosing.
+\item \emph{Ratings (Option B):} Average log-posterior-predictive on a held-out set + one metric of your choosing.
+\end{itemize}
+
+\item \textbf{Convergence diagnostics.}
+\end{enumerate}
+
+\textbf{Option A specific (Ideal Point)}
+
+\begin{enumerate}[label=\alph*),resume]
+\item \textbf{Substantive plots.}
+\begin{itemize}
+\item \textbf{Ideology axis:} posterior means of $\theta_i$ with intervals, colored by party; label $\sim$5 outliers.
+\item \textbf{Bill landscape:} scatter of $(\hat{\beta}_j, \hat{\alpha}_j)$; annotate $\sim$5 highest $\hat{\alpha}_j$ bills.
+\end{itemize}
+
+\item \textbf{Implementation details.} Plot the ELBO vs iteration, number of iterations to convergence etc,.
+\end{enumerate}
+
+\textbf{Option B specific (Matrix Factorization)}
+
+\begin{enumerate}[label=\alph*),resume]
+\setcounter{enumi}{5}
+\item \textbf{Latent dimension sweep.} Run for $K \in \{2, 5, 10, 20\}$ (or a comparable set) and report RMSE/MAE vs. $K$.
+
+\item \textbf{Performance with vs without genre as a feature.}
+
+\item \textbf{Uncertainty (first-order).} Estimate $\text{Var}(x_{ij} \mid \text{data})$, and discuss how you could use this to flag uncertain recommendations (estimate this analytically or by drawing samples from the predictive).
+
+\item \textbf{Visualization (for $K = 2$).} Scatter plots of $\{\hat{\theta}_i\}$ and $\{\hat{\beta}_j\}$; comment on clusters (genres/users).
+
+\item \textbf{Convergence checks} Plot the ELBO vs iteration.
+\end{enumerate}
+
+\subsection*{What to turn in}
+
+Please submit a short report (\textbf{2--4 pages of main text}; this is a soft limit, but avoid going significantly over 4 pages). Your writeup should read like a concise research note describing what you set out to do, how you did it, and what you found. Your report must include all the elements listed in the \emph{What to implement} section above.
+
+The structure below is intended as a set of \emph{guidelines} to help organize your report, rather than a rigid template.
+
+\begin{enumerate}[label=\roman*.]
+\item \textbf{Introduction.} State the problem you are addressing and briefly motivate why the modeling approach is appropriate.
+
+\item \textbf{Model.} Write down the full joint distribution for your generative model, specifying all distributions and parameterizations (e.g., Gamma shape--rate). Include a graphical model if relevant.
+
+\item \textbf{Inference.} Summarize your inference approach and main implementation choices in the main text (details may go in an Appendix).
+
+\item \textbf{Data \& setup.} Describe your dataset or image, preprocessing steps, choice of $K$, priors, and any design decisions. Compare alternative choices where appropriate.
+
+\item \textbf{Results.} Present key outcomes: number of clusters in factors, posterior summaries of component parameters, and representative visualizations of the latent factors, quantitative checks of model fits etc.
+\end{enumerate}
+
 \section*{Question 3: Project-aligned Probabilistic Latent Factor Model}
 
 \subsection*{(i) Introduction}
@@ -2500,21 +2577,20 @@ For properties with observed sale prices, I evaluate the posterior predictive di
 
 \begin{table}[t]
     \centering
-    \begin{tabular}{lcc}
+    \begin{tabular}{lc}
         \toprule
-        Metric & Value & Notes \\
+        Metric & Value \\
         \midrule
-        Avg.\ log $p(y \mid x)$ (log-price) & $-1.15$ & Random 20\% hold-out \\
-        RMSE (log-price) & $1.84$ & Posterior mean $\hat{y}$ \\
-        MAE (log-price) & $0.97$ & Posterior mean $\hat{y}$ \\
-        RMSE (price) & $2.46 \times 10^7$ & In dollars \\
-        MAE (price) & $2.18 \times 10^6$ & In dollars \\
-        % TODO: optionally add robust metrics once computed
-        Median $|y - \hat{y}|$ (log) & [TODO] & Robust central error \\
-        95th pct.\ $|y - \hat{y}|$ (log) & [TODO] & Tail error \\
+        Avg.\ log $p(y \mid x)$ (log-price, 20\% hold-out) & $-1.15$ \\
+        RMSE (log-price) & $1.84$ \\
+        MAE (log-price) & $0.97$ \\
+        RMSE (price in \$) & $2.46 \times 10^7$ \\
+        MAE (price in \$) & $2.18 \times 10^6$ \\
+        Median $|y - \hat{y}|$ (log-price) & [TODO] \\
+        95th pct.\ $|y - \hat{y}|$ (log-price) & [TODO] \\
         \bottomrule
     \end{tabular}
-    \caption{Global posterior predictive metrics for the SemiSupMIWAE model on a random hold-out set. Bracketed entries are placeholders for additional robust metrics (e.g., median absolute error and tail quantiles) once computed.}
+    \caption{Global posterior predictive metrics for the SemiSupMIWAE model on a random hold-out set.}
     \label{tab:global-metrics}
 \end{table}
 
